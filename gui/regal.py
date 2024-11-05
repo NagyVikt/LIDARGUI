@@ -5,13 +5,11 @@ from tkinter import ttk
 from functools import partial
 import logging
 from utils import ToolTip  # Ensure that utils.py contains the ToolTip class
-from config.config import MAX_LEDS_ROW
-
 
 class Regal:
     """Represents a Regal containing multiple LEDs with enhanced visual design."""
 
-    def __init__(self, display_name, internal_name, led_data, controller, max_leds_per_row=MAX_LEDS_ROW):
+    def __init__(self, display_name, internal_name, led_data, controller, max_leds_per_row):
         """
         Initialize a Regal frame with LEDs based on provided led_data.
 
@@ -34,13 +32,14 @@ class Regal:
 
         # Determine number of rows based on the number of LEDs and max LEDs per row
         total_leds = len(led_data)
-        num_rows = (total_leds + max_leds_per_row - 1) // max_leds_per_row if max_leds_per_row else 1
+        max_leds_per_row = max_leds_per_row if max_leds_per_row > 0 else 1  # Ensure at least one LED per row
+        num_rows = (total_leds + max_leds_per_row - 1) // max_leds_per_row
         led_keys = list(led_data.keys())
-        # Create LEDs
 
+        # Create LEDs
         for index, led_id in enumerate(led_keys):
-            row = index // max_leds_per_row if max_leds_per_row else 0
-            column = index % max_leds_per_row if max_leds_per_row else index
+            row = index // max_leds_per_row
+            column = index % max_leds_per_row
 
             # Generate unique led_key using internal_name and led_id
             led_key = controller.generate_unique_led_key(internal_name, led_id)

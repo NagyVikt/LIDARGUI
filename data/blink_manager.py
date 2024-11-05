@@ -3,8 +3,13 @@
 import asyncio
 import time
 import logging
+from config.config import WINDOWS
+import aiohttp  # Add this import at the top
 
-from rpi_ws281x import Color  
+if WINDOWS:
+    pass
+else: 
+    from rpi_ws281x import Color  
 
 
 
@@ -159,18 +164,18 @@ class BlinkManager:
         """
         await self.set_specific_leds_color(leds, (0, 0, 0))
 
+    
     async def notify_clients_block_completed(self):
-        message = 'block_completed'
-        logging.info(f"notify_clients_block_completed: Sending message to clients")
-        # for ws in connected_websockets.copy():
-        #     try:
-        #         logging.info(f"notify_clients_block_completed: Sending message to a client")
-        #         await asyncio.wait_for(ws.send(message), timeout=5)
-        #         logging.info(f"notify_clients_block_completed: Message sent to a client")
-        #     except asyncio.TimeoutError:
-        #         logging.error(f"notify_clients_block_completed: Timeout sending message to client.")
-        #     except Exception as e:
-        #         logging.error(f"Error sending message to client: {e}")
+        logging.info("notify_clients_block_completed: Sending message to clients")
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post('http://localhost:8080/block_completed') as response:
+                    if response.status == 200:
+                        logging.info("Successfully notified led_controller.py")
+                    else:
+                        logging.error(f"Failed to notify led_controller.py, status code {response.status}")
+        except Exception as e:
+            logging.error(f"Exception in notify_clients_block_completed: {e}")
 
     async def set_all_leds_color(self, color):
         """

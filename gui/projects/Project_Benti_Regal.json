@@ -167,13 +167,13 @@
         },
         "27": {
             "FILE": "data/file.png",
-            "selected": false,
-            "order": null
+            "selected": true,
+            "order": 5
         },
         "28": {
             "FILE": "data/file.png",
-            "selected": false,
-            "order": null
+            "selected": true,
+            "order": 4
         },
         "29": {
             "FILE": "data/file.png",

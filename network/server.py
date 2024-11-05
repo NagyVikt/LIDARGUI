@@ -6,7 +6,7 @@ from quart import Quart, request, jsonify
 from data.blink_manager import BlinkManager, Block
 from network.serial_protocol import SerialProtocol
 import serial_asyncio
-
+from config.config import WINDOWS
 # Initialize the Quart app
 app = Quart(__name__)
 app.config['JSON_SORT_KEYS'] = False
@@ -25,18 +25,22 @@ logging.basicConfig(
 
 # LED Initialization Parameters
 is_it_Pi400 = True  # False for using PI4, True for using Pi400
+if WINDOWS: 
+    from utils.mock_rpi_ws281x import Adafruit_NeoPixel
 
-# Initialize LED strips and colors
-if is_it_Pi400 == False:
-    from neopixel import *
-    logging.info("WE ARE USING Pi4")
-    hex_codes = ['FF0000', '00FF00', '0000FF', '00AA00']  # Hex codes for colors
-    rgb = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 200, 0)]  # RGB translations for Pi4
-else:
-    from rpi_ws281x import *
-    logging.info("WE ARE USING Pi400")
-    hex_codes = ['FF0000', '00FF00', '0000FF', '00AA00']  # Hex codes for colors
-    rgb = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 200, 0)]  # RGB translations
+
+else: 
+    # Initialize LED strips and colors
+    if is_it_Pi400 == False:
+        from neopixel import *
+        logging.info("WE ARE USING Pi4")
+        hex_codes = ['FF0000', '00FF00', '0000FF', '00AA00']  # Hex codes for colors
+        rgb = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 200, 0)]  # RGB translations for Pi4
+    else:
+        from rpi_ws281x import *
+        logging.info("WE ARE USING Pi400")
+        hex_codes = ['FF0000', '00FF00', '0000FF', '00AA00']  # Hex codes for colors
+        rgb = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 200, 0)]  # RGB translations
 
 
 # Define color codes and RGB values
