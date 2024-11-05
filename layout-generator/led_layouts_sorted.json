@@ -1,0 +1,798 @@
+{
+    "Regal1": {
+        "1": {
+            "FILE": "data/another.json"
+        },
+        "2": {
+            "FILE": "data/another.json"
+        },
+        "3": {
+            "FILE": "data/another.json"
+        },
+        "4": {
+            "FILE": "data/another.json"
+        },
+        "5": {
+            "FILE": "data/another.json"
+        },
+        "6": {
+            "FILE": "data/another.json"
+        },
+        "7": {
+            "FILE": "data/another.json"
+        },
+        "8": {
+            "FILE": "data/another.json"
+        },
+        "9": {
+            "FILE": "data/another.json"
+        },
+        "10": {
+            "FILE": "data/another.json"
+        },
+        "11": {
+            "FILE": "data/another.json"
+        },
+        "12": {
+            "FILE": "data/another.json"
+        },
+        "13": {
+            "FILE": "data/another.json"
+        },
+        "14": {
+            "FILE": "data/another.json"
+        },
+        "15": {
+            "FILE": "data/another.json"
+        },
+        "16": {
+            "FILE": "data/another.json"
+        },
+        "17": {
+            "FILE": "data/another.json"
+        },
+        "18": {
+            "FILE": "data/another.json"
+        },
+        "19": {
+            "FILE": "data/another.json"
+        },
+        "20": {
+            "FILE": "data/another.json"
+        },
+        "21": {
+            "FILE": "data/another.json"
+        },
+        "22": {
+            "FILE": "data/another.json"
+        },
+        "23": {
+            "FILE": "data/another.json"
+        },
+        "24": {
+            "FILE": "data/another.json"
+        },
+        "25": {
+            "FILE": "data/another.json"
+        },
+        "26": {
+            "FILE": "data/another.json"
+        },
+        "27": {
+            "FILE": "data/another.json"
+        },
+        "28": {
+            "FILE": "data/another.json"
+        },
+        "29": {
+            "FILE": "data/another.json"
+        },
+        "30": {
+            "FILE": "data/another.json"
+        },
+        "31": {
+            "FILE": "data/another.json"
+        },
+        "32": {
+            "FILE": "data/another.json"
+        },
+        "33": {
+            "FILE": "data/another.json"
+        },
+        "34": {
+            "FILE": "data/another.json"
+        },
+        "35": {
+            "FILE": "data/another.json"
+        },
+        "36": {
+            "FILE": "data/another.json"
+        },
+        "37": {
+            "FILE": "data/another.json"
+        },
+        "38": {
+            "FILE": "data/another.json"
+        },
+        "39": {
+            "FILE": "data/another.json"
+        },
+        "40": {
+            "FILE": "data/another.json"
+        },
+        "41": {
+            "FILE": "data/another.json"
+        },
+        "42": {
+            "FILE": "data/another.json"
+        },
+        "43": {
+            "FILE": "data/another.json"
+        },
+        "44": {
+            "FILE": "data/another.json"
+        },
+        "45": {
+            "FILE": "data/another.json"
+        },
+        "46": {
+            "FILE": "data/another.json"
+        },
+        "47": {
+            "FILE": "data/another.json"
+        },
+        "48": {
+            "FILE": "data/another.json"
+        },
+        "49": {
+            "FILE": "data/another.json"
+        },
+        "50": {
+            "FILE": "data/another.json"
+        },
+        "51": {
+            "FILE": "data/another.json"
+        },
+        "52": {
+            "FILE": "data/another.json"
+        },
+        "53": {
+            "FILE": "data/another.json"
+        },
+        "54": {
+            "FILE": "data/another.json"
+        },
+        "55": {
+            "FILE": "data/another.json"
+        },
+        "56": {
+            "FILE": "data/another.json"
+        },
+        "57": {
+            "FILE": "data/another.json"
+        },
+        "58": {
+            "FILE": "data/another.json"
+        },
+        "59": {
+            "FILE": "data/another.json"
+        },
+        "60": {
+            "FILE": "data/another.json"
+        },
+        "61": {
+            "FILE": "data/another.json"
+        },
+        "62": {
+            "FILE": "data/another.json"
+        },
+        "63": {
+            "FILE": "data/another.json"
+        },
+        "64": {
+            "FILE": "data/another.json"
+        },
+        "65": {
+            "FILE": "data/another.json"
+        },
+        "66": {
+            "FILE": "data/another.json"
+        },
+        "67": {
+            "FILE": "data/another.json"
+        },
+        "68": {
+            "FILE": "data/another.json"
+        },
+        "69": {
+            "FILE": "data/another.json"
+        },
+        "70": {
+            "FILE": "data/another.json"
+        },
+        "71": {
+            "FILE": "data/another.json"
+        },
+        "72": {
+            "FILE": "data/another.json"
+        },
+        "73": {
+            "FILE": "data/another.json"
+        },
+        "74": {
+            "FILE": "data/another.json"
+        },
+        "75": {
+            "FILE": "data/another.json"
+        },
+        "76": {
+            "FILE": "data/another.json"
+        },
+        "77": {
+            "FILE": "data/another.json"
+        },
+        "78": {
+            "FILE": "data/another.json"
+        },
+        "79": {
+            "FILE": "data/another.json"
+        },
+        "80": {
+            "FILE": "data/another.json"
+        },
+        "81": {
+            "FILE": "data/another.json"
+        },
+        "82": {
+            "FILE": "data/another.json"
+        },
+        "83": {
+            "FILE": "data/another.json"
+        },
+        "84": {
+            "FILE": "data/another.json"
+        },
+        "85": {
+            "FILE": "data/another.json"
+        },
+        "86": {
+            "FILE": "data/another.json"
+        },
+        "87": {
+            "FILE": "data/another.json"
+        },
+        "88": {
+            "FILE": "data/another.json"
+        },
+        "89": {
+            "FILE": "data/another.json"
+        },
+        "90": {
+            "FILE": "data/another.json"
+        },
+        "91": {
+            "FILE": "data/another.json"
+        },
+        "92": {
+            "FILE": "data/another.json"
+        },
+        "93": {
+            "FILE": "data/another.json"
+        },
+        "94": {
+            "FILE": "data/another.json"
+        },
+        "95": {
+            "FILE": "data/another.json"
+        },
+        "96": {
+            "FILE": "data/another.json"
+        },
+        "97": {
+            "FILE": "data/another.json"
+        },
+        "98": {
+            "FILE": "data/another.json"
+        },
+        "99": {
+            "FILE": "data/another.json"
+        },
+        "100": {
+            "FILE": "data/another.json"
+        },
+        "101": {
+            "FILE": "data/another.json"
+        },
+        "102": {
+            "FILE": "data/another.json"
+        },
+        "103": {
+            "FILE": "data/another.json"
+        },
+        "104": {
+            "FILE": "data/another.json"
+        },
+        "105": {
+            "FILE": "data/another.json"
+        },
+        "106": {
+            "FILE": "data/another.json"
+        },
+        "107": {
+            "FILE": "data/another.json"
+        },
+        "108": {
+            "FILE": "data/another.json"
+        },
+        "109": {
+            "FILE": "data/another.json"
+        },
+        "110": {
+            "FILE": "data/another.json"
+        },
+        "111": {
+            "FILE": "data/another.json"
+        },
+        "112": {
+            "FILE": "data/another.json"
+        },
+        "113": {
+            "FILE": "data/another.json"
+        },
+        "114": {
+            "FILE": "data/another.json"
+        },
+        "115": {
+            "FILE": "data/another.json"
+        },
+        "116": {
+            "FILE": "data/another.json"
+        },
+        "117": {
+            "FILE": "data/another.json"
+        },
+        "118": {
+            "FILE": "data/another.json"
+        },
+        "119": {
+            "FILE": "data/another.json"
+        },
+        "120": {
+            "FILE": "data/another.json"
+        },
+        "121": {
+            "FILE": "data/another.json"
+        },
+        "122": {
+            "FILE": "data/another.json"
+        },
+        "123": {
+            "FILE": "data/another.json"
+        },
+        "124": {
+            "FILE": "data/another.json"
+        },
+        "125": {
+            "FILE": "data/another.json"
+        },
+        "126": {
+            "FILE": "data/another.json"
+        },
+        "127": {
+            "FILE": "data/another.json"
+        },
+        "128": {
+            "FILE": "data/another.json"
+        },
+        "129": {
+            "FILE": "data/another.json"
+        },
+        "130": {
+            "FILE": "data/another.json"
+        },
+        "131": {
+            "FILE": "data/another.json"
+        },
+        "132": {
+            "FILE": "data/another.json"
+        }
+    },
+    "Regal2": {
+        "134": {
+            "FILE": "data/another.json"
+        },
+        "135": {
+            "FILE": "data/another.json"
+        },
+        "136": {
+            "FILE": "data/another.json"
+        },
+        "137": {
+            "FILE": "data/another.json"
+        },
+        "138": {
+            "FILE": "data/another.json"
+        },
+        "139": {
+            "FILE": "data/another.json"
+        },
+        "140": {
+            "FILE": "data/another.json"
+        },
+        "141": {
+            "FILE": "data/another.json"
+        },
+        "142": {
+            "FILE": "data/another.json"
+        },
+        "143": {
+            "FILE": "data/another.json"
+        },
+        "144": {
+            "FILE": "data/another.json"
+        },
+        "145": {
+            "FILE": "data/another.json"
+        },
+        "146": {
+            "FILE": "data/another.json"
+        },
+        "147": {
+            "FILE": "data/another.json"
+        },
+        "148": {
+            "FILE": "data/another.json"
+        },
+        "149": {
+            "FILE": "data/another.json"
+        },
+        "150": {
+            "FILE": "data/another.json"
+        },
+        "151": {
+            "FILE": "data/another.json"
+        },
+        "152": {
+            "FILE": "data/another.json"
+        },
+        "153": {
+            "FILE": "data/another.json"
+        },
+        "154": {
+            "FILE": "data/another.json"
+        },
+        "155": {
+            "FILE": "data/another.json"
+        },
+        "156": {
+            "FILE": "data/another.json"
+        },
+        "157": {
+            "FILE": "data/another.json"
+        },
+        "158": {
+            "FILE": "data/another.json"
+        },
+        "159": {
+            "FILE": "data/another.json"
+        },
+        "160": {
+            "FILE": "data/another.json"
+        },
+        "161": {
+            "FILE": "data/another.json"
+        },
+        "162": {
+            "FILE": "data/another.json"
+        },
+        "163": {
+            "FILE": "data/another.json"
+        },
+        "164": {
+            "FILE": "data/another.json"
+        },
+        "165": {
+            "FILE": "data/another.json"
+        },
+        "166": {
+            "FILE": "data/another.json"
+        },
+        "167": {
+            "FILE": "data/another.json"
+        },
+        "168": {
+            "FILE": "data/another.json"
+        },
+        "169": {
+            "FILE": "data/another.json"
+        },
+        "170": {
+            "FILE": "data/another.json"
+        },
+        "171": {
+            "FILE": "data/another.json"
+        },
+        "172": {
+            "FILE": "data/another.json"
+        },
+        "173": {
+            "FILE": "data/another.json"
+        },
+        "174": {
+            "FILE": "data/another.json"
+        },
+        "175": {
+            "FILE": "data/another.json"
+        },
+        "176": {
+            "FILE": "data/another.json"
+        },
+        "177": {
+            "FILE": "data/another.json"
+        },
+        "178": {
+            "FILE": "data/another.json"
+        },
+        "179": {
+            "FILE": "data/another.json"
+        },
+        "180": {
+            "FILE": "data/another.json"
+        },
+        "190": {
+            "FILE": "data/another.json"
+        },
+        "191": {
+            "FILE": "data/another.json"
+        },
+        "192": {
+            "FILE": "data/another.json"
+        },
+        "193": {
+            "FILE": "data/another.json"
+        },
+        "194": {
+            "FILE": "data/another.json"
+        },
+        "195": {
+            "FILE": "data/another.json"
+        },
+        "196": {
+            "FILE": "data/another.json"
+        },
+        "197": {
+            "FILE": "data/another.json"
+        },
+        "198": {
+            "FILE": "data/another.json"
+        },
+        "199": {
+            "FILE": "data/another.json"
+        },
+        "200": {
+            "FILE": "data/another.json"
+        },
+        "201": {
+            "FILE": "data/another.json"
+        },
+        "202": {
+            "FILE": "data/another.json"
+        },
+        "203": {
+            "FILE": "data/another.json"
+        },
+        "204": {
+            "FILE": "data/another.json"
+        },
+        "205": {
+            "FILE": "data/another.json"
+        },
+        "206": {
+            "FILE": "data/another.json"
+        },
+        "207": {
+            "FILE": "data/another.json"
+        },
+        "208": {
+            "FILE": "data/another.json"
+        },
+        "209": {
+            "FILE": "data/another.json"
+        },
+        "210": {
+            "FILE": "data/another.json"
+        },
+        "211": {
+            "FILE": "data/another.json"
+        },
+        "212": {
+            "FILE": "data/another.json"
+        },
+        "213": {
+            "FILE": "data/another.json"
+        },
+        "214": {
+            "FILE": "data/another.json"
+        },
+        "215": {
+            "FILE": "data/another.json"
+        },
+        "216": {
+            "FILE": "data/another.json"
+        },
+        "217": {
+            "FILE": "data/another.json"
+        },
+        "218": {
+            "FILE": "data/another.json"
+        },
+        "219": {
+            "FILE": "data/another.json"
+        },
+        "220": {
+            "FILE": "data/another.json"
+        },
+        "221": {
+            "FILE": "data/another.json"
+        },
+        "222": {
+            "FILE": "data/another.json"
+        },
+        "223": {
+            "FILE": "data/another.json"
+        },
+        "224": {
+            "FILE": "data/another.json"
+        },
+        "225": {
+            "FILE": "data/another.json"
+        },
+        "226": {
+            "FILE": "data/another.json"
+        },
+        "227": {
+            "FILE": "data/another.json"
+        },
+        "228": {
+            "FILE": "data/another.json"
+        },
+        "229": {
+            "FILE": "data/another.json"
+        },
+        "230": {
+            "FILE": "data/another.json"
+        },
+        "231": {
+            "FILE": "data/another.json"
+        },
+        "232": {
+            "FILE": "data/another.json"
+        },
+        "233": {
+            "FILE": "data/another.json"
+        },
+        "234": {
+            "FILE": "data/another.json"
+        },
+        "235": {
+            "FILE": "data/another.json"
+        },
+        "236": {
+            "FILE": "data/another.json"
+        },
+        "237": {
+            "FILE": "data/another.json"
+        },
+        "238": {
+            "FILE": "data/another.json"
+        },
+        "239": {
+            "FILE": "data/another.json"
+        },
+        "240": {
+            "FILE": "data/another.json"
+        },
+        "241": {
+            "FILE": "data/another.json"
+        },
+        "242": {
+            "FILE": "data/another.json"
+        },
+        "243": {
+            "FILE": "data/another.json"
+        },
+        "244": {
+            "FILE": "data/another.json"
+        },
+        "245": {
+            "FILE": "data/another.json"
+        },
+        "246": {
+            "FILE": "data/another.json"
+        },
+        "247": {
+            "FILE": "data/another.json"
+        },
+        "248": {
+            "FILE": "data/another.json"
+        },
+        "249": {
+            "FILE": "data/another.json"
+        },
+        "250": {
+            "FILE": "data/another.json"
+        },
+        "251": {
+            "FILE": "data/another.json"
+        },
+        "252": {
+            "FILE": "data/another.json"
+        },
+        "253": {
+            "FILE": "data/another.json"
+        },
+        "254": {
+            "FILE": "data/another.json"
+        },
+        "255": {
+            "FILE": "data/another.json"
+        },
+        "256": {
+            "FILE": "data/another.json"
+        },
+        "257": {
+            "FILE": "data/another.json"
+        },
+        "258": {
+            "FILE": "data/another.json"
+        },
+        "259": {
+            "FILE": "data/another.json"
+        },
+        "260": {
+            "FILE": "data/another.json"
+        },
+        "261": {
+            "FILE": "data/another.json"
+        },
+        "262": {
+            "FILE": "data/another.json"
+        },
+        "263": {
+            "FILE": "data/another.json"
+        },
+        "264": {
+            "FILE": "data/another.json"
+        },
+        "265": {
+            "FILE": "data/another.json"
+        },
+        "266": {
+            "FILE": "data/another.json"
+        },
+        "267": {
+            "FILE": "data/another.json"
+        },
+        "268": {
+            "FILE": "data/another.json"
+        },
+        "269": {
+            "FILE": "data/another.json"
+        },
+        "270": {
+            "FILE": "data/another.json"
+        },
+        "271": {
+            "FILE": "data/another.json"
+        },
+        "272": {
+            "FILE": "data/another.json"
+        },
+        "273": {
+            "FILE": "data/another.json"
+        },
+        "274": {
+            "FILE": "data/another.json"
+        }
+    }
+}

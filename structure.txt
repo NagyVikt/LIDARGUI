@@ -1,0 +1,24 @@
+led_control_panel/
+│
+├── main.py
+├── regal.py
+├── requirements.txt
+├── utils/
+│   ├── __init__.py
+│   ├── logging_config.py
+│   └── tooltip.py
+├── network/
+│   ├── __init__.py
+│   ├── http_client.py
+│   ├── websocket_client.py
+│   ├── server.py
+│   ├── serial_protocol.py
+│   └── run_server.py  # Optional
+├── data/
+│   ├── __init__.py
+│   └── blink_manager.py
+├── gui/
+│   ├── __init__.py
+│   └── controller.py
+└── json/
+    └── (Your project JSON files)

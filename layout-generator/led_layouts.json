@@ -1,0 +1,1062 @@
+{
+    "Regal1": {
+        "132": {
+            "POSITION": "1",
+            "BITMAP": "MAP"
+        },
+        "131": {
+            "POSITION": "2",
+            "BITMAP": "MAP"
+        },
+        "130": {
+            "POSITION": "3",
+            "BITMAP": "MAP"
+        },
+        "129": {
+            "POSITION": "4",
+            "BITMAP": "MAP"
+        },
+        "128": {
+            "POSITION": "5",
+            "BITMAP": "MAP"
+        },
+        "127": {
+            "POSITION": "6",
+            "BITMAP": "MAP"
+        },
+        "126": {
+            "POSITION": "7",
+            "BITMAP": "MAP"
+        },
+        "125": {
+            "POSITION": "8",
+            "BITMAP": "MAP"
+        },
+        "124": {
+            "POSITION": "9",
+            "BITMAP": "MAP"
+        },
+        "123": {
+            "POSITION": "10",
+            "BITMAP": "MAP"
+        },
+        "122": {
+            "POSITION": "11",
+            "BITMAP": "MAP"
+        },
+        "121": {
+            "POSITION": "12",
+            "BITMAP": "MAP"
+        },
+        "120": {
+            "POSITION": "13",
+            "BITMAP": "MAP"
+        },
+        "119": {
+            "POSITION": "14",
+            "BITMAP": "MAP"
+        },
+        "118": {
+            "POSITION": "15",
+            "BITMAP": "MAP"
+        },
+        "117": {
+            "POSITION": "16",
+            "BITMAP": "MAP"
+        },
+        "116": {
+            "POSITION": "17",
+            "BITMAP": "MAP"
+        },
+        "115": {
+            "POSITION": "18",
+            "BITMAP": "MAP"
+        },
+        "114": {
+            "POSITION": "19",
+            "BITMAP": "MAP"
+        },
+        "113": {
+            "POSITION": "20",
+            "BITMAP": "MAP"
+        },
+        "112": {
+            "POSITION": "21",
+            "BITMAP": "MAP"
+        },
+        "111": {
+            "POSITION": "22",
+            "BITMAP": "MAP"
+        },
+        "89": {
+            "POSITION": "23",
+            "BITMAP": "MAP"
+        },
+        "90": {
+            "POSITION": "24",
+            "BITMAP": "MAP"
+        },
+        "91": {
+            "POSITION": "25",
+            "BITMAP": "MAP"
+        },
+        "92": {
+            "POSITION": "26",
+            "BITMAP": "MAP"
+        },
+        "93": {
+            "POSITION": "27",
+            "BITMAP": "MAP"
+        },
+        "94": {
+            "POSITION": "28",
+            "BITMAP": "MAP"
+        },
+        "95": {
+            "POSITION": "29",
+            "BITMAP": "MAP"
+        },
+        "96": {
+            "POSITION": "30",
+            "BITMAP": "MAP"
+        },
+        "97": {
+            "POSITION": "31",
+            "BITMAP": "MAP"
+        },
+        "98": {
+            "POSITION": "32",
+            "BITMAP": "MAP"
+        },
+        "99": {
+            "POSITION": "33",
+            "BITMAP": "MAP"
+        },
+        "100": {
+            "POSITION": "34",
+            "BITMAP": "MAP"
+        },
+        "101": {
+            "POSITION": "35",
+            "BITMAP": "MAP"
+        },
+        "102": {
+            "POSITION": "36",
+            "BITMAP": "MAP"
+        },
+        "103": {
+            "POSITION": "37",
+            "BITMAP": "MAP"
+        },
+        "104": {
+            "POSITION": "38",
+            "BITMAP": "MAP"
+        },
+        "105": {
+            "POSITION": "39",
+            "BITMAP": "MAP"
+        },
+        "106": {
+            "POSITION": "40",
+            "BITMAP": "MAP"
+        },
+        "107": {
+            "POSITION": "41",
+            "BITMAP": "MAP"
+        },
+        "108": {
+            "POSITION": "42",
+            "BITMAP": "MAP"
+        },
+        "109": {
+            "POSITION": "43",
+            "BITMAP": "MAP"
+        },
+        "110": {
+            "POSITION": "44",
+            "BITMAP": "MAP"
+        },
+        "88": {
+            "POSITION": "45",
+            "BITMAP": "MAP"
+        },
+        "87": {
+            "POSITION": "46",
+            "BITMAP": "MAP"
+        },
+        "86": {
+            "POSITION": "47",
+            "BITMAP": "MAP"
+        },
+        "85": {
+            "POSITION": "48",
+            "BITMAP": "MAP"
+        },
+        "84": {
+            "POSITION": "49",
+            "BITMAP": "MAP"
+        },
+        "83": {
+            "POSITION": "50",
+            "BITMAP": "MAP"
+        },
+        "82": {
+            "POSITION": "51",
+            "BITMAP": "MAP"
+        },
+        "81": {
+            "POSITION": "52",
+            "BITMAP": "MAP"
+        },
+        "80": {
+            "POSITION": "53",
+            "BITMAP": "MAP"
+        },
+        "79": {
+            "POSITION": "54",
+            "BITMAP": "MAP"
+        },
+        "78": {
+            "POSITION": "55",
+            "BITMAP": "MAP"
+        },
+        "77": {
+            "POSITION": "56",
+            "BITMAP": "MAP"
+        },
+        "76": {
+            "POSITION": "57",
+            "BITMAP": "MAP"
+        },
+        "75": {
+            "POSITION": "58",
+            "BITMAP": "MAP"
+        },
+        "74": {
+            "POSITION": "59",
+            "BITMAP": "MAP"
+        },
+        "73": {
+            "POSITION": "60",
+            "BITMAP": "MAP"
+        },
+        "72": {
+            "POSITION": "61",
+            "BITMAP": "MAP"
+        },
+        "71": {
+            "POSITION": "62",
+            "BITMAP": "MAP"
+        },
+        "70": {
+            "POSITION": "63",
+            "BITMAP": "MAP"
+        },
+        "69": {
+            "POSITION": "64",
+            "BITMAP": "MAP"
+        },
+        "68": {
+            "POSITION": "65",
+            "BITMAP": "MAP"
+        },
+        "67": {
+            "POSITION": "66",
+            "BITMAP": "MAP"
+        },
+        "45": {
+            "POSITION": "67",
+            "BITMAP": "MAP"
+        },
+        "46": {
+            "POSITION": "68",
+            "BITMAP": "MAP"
+        },
+        "47": {
+            "POSITION": "69",
+            "BITMAP": "MAP"
+        },
+        "48": {
+            "POSITION": "70",
+            "BITMAP": "MAP"
+        },
+        "49": {
+            "POSITION": "71",
+            "BITMAP": "MAP"
+        },
+        "50": {
+            "POSITION": "72",
+            "BITMAP": "MAP"
+        },
+        "51": {
+            "POSITION": "73",
+            "BITMAP": "MAP"
+        },
+        "52": {
+            "POSITION": "74",
+            "BITMAP": "MAP"
+        },
+        "53": {
+            "POSITION": "75",
+            "BITMAP": "MAP"
+        },
+        "54": {
+            "POSITION": "76",
+            "BITMAP": "MAP"
+        },
+        "55": {
+            "POSITION": "77",
+            "BITMAP": "MAP"
+        },
+        "56": {
+            "POSITION": "78",
+            "BITMAP": "MAP"
+        },
+        "57": {
+            "POSITION": "79",
+            "BITMAP": "MAP"
+        },
+        "58": {
+            "POSITION": "80",
+            "BITMAP": "MAP"
+        },
+        "59": {
+            "POSITION": "81",
+            "BITMAP": "MAP"
+        },
+        "60": {
+            "POSITION": "82",
+            "BITMAP": "MAP"
+        },
+        "61": {
+            "POSITION": "83",
+            "BITMAP": "MAP"
+        },
+        "62": {
+            "POSITION": "84",
+            "BITMAP": "MAP"
+        },
+        "63": {
+            "POSITION": "85",
+            "BITMAP": "MAP"
+        },
+        "64": {
+            "POSITION": "86",
+            "BITMAP": "MAP"
+        },
+        "65": {
+            "POSITION": "87",
+            "BITMAP": "MAP"
+        },
+        "66": {
+            "POSITION": "88",
+            "BITMAP": "MAP"
+        },
+        "44": {
+            "POSITION": "89",
+            "BITMAP": "MAP"
+        },
+        "43": {
+            "POSITION": "90",
+            "BITMAP": "MAP"
+        },
+        "42": {
+            "POSITION": "91",
+            "BITMAP": "MAP"
+        },
+        "41": {
+            "POSITION": "92",
+            "BITMAP": "MAP"
+        },
+        "40": {
+            "POSITION": "93",
+            "BITMAP": "MAP"
+        },
+        "39": {
+            "POSITION": "94",
+            "BITMAP": "MAP"
+        },
+        "38": {
+            "POSITION": "95",
+            "BITMAP": "MAP"
+        },
+        "37": {
+            "POSITION": "96",
+            "BITMAP": "MAP"
+        },
+        "36": {
+            "POSITION": "97",
+            "BITMAP": "MAP"
+        },
+        "35": {
+            "POSITION": "98",
+            "BITMAP": "MAP"
+        },
+        "34": {
+            "POSITION": "99",
+            "BITMAP": "MAP"
+        },
+        "33": {
+            "POSITION": "100",
+            "BITMAP": "MAP"
+        },
+        "32": {
+            "POSITION": "101",
+            "BITMAP": "MAP"
+        },
+        "31": {
+            "POSITION": "102",
+            "BITMAP": "MAP"
+        },
+        "30": {
+            "POSITION": "103",
+            "BITMAP": "MAP"
+        },
+        "29": {
+            "POSITION": "104",
+            "BITMAP": "MAP"
+        },
+        "28": {
+            "POSITION": "105",
+            "BITMAP": "MAP"
+        },
+        "27": {
+            "POSITION": "106",
+            "BITMAP": "MAP"
+        },
+        "26": {
+            "POSITION": "107",
+            "BITMAP": "MAP"
+        },
+        "25": {
+            "POSITION": "108",
+            "BITMAP": "MAP"
+        },
+        "24": {
+            "POSITION": "109",
+            "BITMAP": "MAP"
+        },
+        "23": {
+            "POSITION": "110",
+            "BITMAP": "MAP"
+        },
+        "1": {
+            "POSITION": "111",
+            "BITMAP": "MAP"
+        },
+        "2": {
+            "POSITION": "112",
+            "BITMAP": "MAP"
+        },
+        "3": {
+            "POSITION": "113",
+            "BITMAP": "MAP"
+        },
+        "4": {
+            "POSITION": "114",
+            "BITMAP": "MAP"
+        },
+        "5": {
+            "POSITION": "115",
+            "BITMAP": "MAP"
+        },
+        "6": {
+            "POSITION": "116",
+            "BITMAP": "MAP"
+        },
+        "7": {
+            "POSITION": "117",
+            "BITMAP": "MAP"
+        },
+        "8": {
+            "POSITION": "118",
+            "BITMAP": "MAP"
+        },
+        "9": {
+            "POSITION": "119",
+            "BITMAP": "MAP"
+        },
+        "10": {
+            "POSITION": "120",
+            "BITMAP": "MAP"
+        },
+        "11": {
+            "POSITION": "121",
+            "BITMAP": "MAP"
+        },
+        "12": {
+            "POSITION": "122",
+            "BITMAP": "MAP"
+        },
+        "13": {
+            "POSITION": "123",
+            "BITMAP": "MAP"
+        },
+        "14": {
+            "POSITION": "124",
+            "BITMAP": "MAP"
+        },
+        "15": {
+            "POSITION": "125",
+            "BITMAP": "MAP"
+        },
+        "16": {
+            "POSITION": "126",
+            "BITMAP": "MAP"
+        },
+        "17": {
+            "POSITION": "127",
+            "BITMAP": "MAP"
+        },
+        "18": {
+            "POSITION": "128",
+            "BITMAP": "MAP"
+        },
+        "19": {
+            "POSITION": "129",
+            "BITMAP": "MAP"
+        },
+        "20": {
+            "POSITION": "130",
+            "BITMAP": "MAP"
+        },
+        "21": {
+            "POSITION": "131",
+            "BITMAP": "MAP"
+        },
+        "22": {
+            "POSITION": "132",
+            "BITMAP": "MAP"
+        }
+    },
+    "Regal2": {
+        "274": {
+            "POSITION": "133",
+            "BITMAP": "MAP"
+        },
+        "273": {
+            "POSITION": "134",
+            "BITMAP": "MAP"
+        },
+        "272": {
+            "POSITION": "135",
+            "BITMAP": "MAP"
+        },
+        "271": {
+            "POSITION": "136",
+            "BITMAP": "MAP"
+        },
+        "270": {
+            "POSITION": "137",
+            "BITMAP": "MAP"
+        },
+        "269": {
+            "POSITION": "138",
+            "BITMAP": "MAP"
+        },
+        "268": {
+            "POSITION": "139",
+            "BITMAP": "MAP"
+        },
+        "267": {
+            "POSITION": "140",
+            "BITMAP": "MAP"
+        },
+        "266": {
+            "POSITION": "141",
+            "BITMAP": "MAP"
+        },
+        "265": {
+            "POSITION": "142",
+            "BITMAP": "MAP"
+        },
+        "264": {
+            "POSITION": "143",
+            "BITMAP": "MAP"
+        },
+        "263": {
+            "POSITION": "144",
+            "BITMAP": "MAP"
+        },
+        "262": {
+            "POSITION": "145",
+            "BITMAP": "MAP"
+        },
+        "261": {
+            "POSITION": "146",
+            "BITMAP": "MAP"
+        },
+        "260": {
+            "POSITION": "147",
+            "BITMAP": "MAP"
+        },
+        "259": {
+            "POSITION": "148",
+            "BITMAP": "MAP"
+        },
+        "258": {
+            "POSITION": "149",
+            "BITMAP": "MAP"
+        },
+        "257": {
+            "POSITION": "150",
+            "BITMAP": "MAP"
+        },
+        "256": {
+            "POSITION": "151",
+            "BITMAP": "MAP"
+        },
+        "255": {
+            "POSITION": "152",
+            "BITMAP": "MAP"
+        },
+        "254": {
+            "POSITION": "153",
+            "BITMAP": "MAP"
+        },
+        "253": {
+            "POSITION": "154",
+            "BITMAP": "MAP"
+        },
+        "231": {
+            "POSITION": "155",
+            "BITMAP": "MAP"
+        },
+        "232": {
+            "POSITION": "156",
+            "BITMAP": "MAP"
+        },
+        "233": {
+            "POSITION": "157",
+            "BITMAP": "MAP"
+        },
+        "234": {
+            "POSITION": "158",
+            "BITMAP": "MAP"
+        },
+        "235": {
+            "POSITION": "159",
+            "BITMAP": "MAP"
+        },
+        "236": {
+            "POSITION": "160",
+            "BITMAP": "MAP"
+        },
+        "237": {
+            "POSITION": "161",
+            "BITMAP": "MAP"
+        },
+        "238": {
+            "POSITION": "162",
+            "BITMAP": "MAP"
+        },
+        "239": {
+            "POSITION": "163",
+            "BITMAP": "MAP"
+        },
+        "240": {
+            "POSITION": "164",
+            "BITMAP": "MAP"
+        },
+        "241": {
+            "POSITION": "165",
+            "BITMAP": "MAP"
+        },
+        "242": {
+            "POSITION": "166",
+            "BITMAP": "MAP"
+        },
+        "243": {
+            "POSITION": "167",
+            "BITMAP": "MAP"
+        },
+        "244": {
+            "POSITION": "168",
+            "BITMAP": "MAP"
+        },
+        "245": {
+            "POSITION": "169",
+            "BITMAP": "MAP"
+        },
+        "246": {
+            "POSITION": "170",
+            "BITMAP": "MAP"
+        },
+        "247": {
+            "POSITION": "171",
+            "BITMAP": "MAP"
+        },
+        "248": {
+            "POSITION": "172",
+            "BITMAP": "MAP"
+        },
+        "249": {
+            "POSITION": "173",
+            "BITMAP": "MAP"
+        },
+        "250": {
+            "POSITION": "174",
+            "BITMAP": "MAP"
+        },
+        "251": {
+            "POSITION": "175",
+            "BITMAP": "MAP"
+        },
+        "252": {
+            "POSITION": "176",
+            "BITMAP": "MAP"
+        },
+        "230": {
+            "POSITION": "177",
+            "BITMAP": "MAP"
+        },
+        "229": {
+            "POSITION": "178",
+            "BITMAP": "MAP"
+        },
+        "228": {
+            "POSITION": "179",
+            "BITMAP": "MAP"
+        },
+        "227": {
+            "POSITION": "180",
+            "BITMAP": "MAP"
+        },
+        "226": {
+            "POSITION": "181",
+            "BITMAP": "MAP"
+        },
+        "225": {
+            "POSITION": "182",
+            "BITMAP": "MAP"
+        },
+        "224": {
+            "POSITION": "183",
+            "BITMAP": "MAP"
+        },
+        "223": {
+            "POSITION": "184",
+            "BITMAP": "MAP"
+        },
+        "222": {
+            "POSITION": "185",
+            "BITMAP": "MAP"
+        },
+        "221": {
+            "POSITION": "186",
+            "BITMAP": "MAP"
+        },
+        "220": {
+            "POSITION": "187",
+            "BITMAP": "MAP"
+        },
+        "219": {
+            "POSITION": "188",
+            "BITMAP": "MAP"
+        },
+        "218": {
+            "POSITION": "189",
+            "BITMAP": "MAP"
+        },
+        "217": {
+            "POSITION": "190",
+            "BITMAP": "MAP"
+        },
+        "216": {
+            "POSITION": "191",
+            "BITMAP": "MAP"
+        },
+        "215": {
+            "POSITION": "192",
+            "BITMAP": "MAP"
+        },
+        "214": {
+            "POSITION": "193",
+            "BITMAP": "MAP"
+        },
+        "213": {
+            "POSITION": "194",
+            "BITMAP": "MAP"
+        },
+        "212": {
+            "POSITION": "195",
+            "BITMAP": "MAP"
+        },
+        "211": {
+            "POSITION": "196",
+            "BITMAP": "MAP"
+        },
+        "210": {
+            "POSITION": "197",
+            "BITMAP": "MAP"
+        },
+        "209": {
+            "POSITION": "198",
+            "BITMAP": "MAP"
+        },
+        "178": {
+            "POSITION": "199",
+            "BITMAP": "MAP"
+        },
+        "179": {
+            "POSITION": "200",
+            "BITMAP": "MAP"
+        },
+        "180": {
+            "POSITION": "201",
+            "BITMAP": "MAP"
+        },
+        "190": {
+            "POSITION": "202",
+            "BITMAP": "MAP"
+        },
+        "191": {
+            "POSITION": "203",
+            "BITMAP": "MAP"
+        },
+        "192": {
+            "POSITION": "204",
+            "BITMAP": "MAP"
+        },
+        "193": {
+            "POSITION": "205",
+            "BITMAP": "MAP"
+        },
+        "194": {
+            "POSITION": "206",
+            "BITMAP": "MAP"
+        },
+        "195": {
+            "POSITION": "207",
+            "BITMAP": "MAP"
+        },
+        "196": {
+            "POSITION": "208",
+            "BITMAP": "MAP"
+        },
+        "197": {
+            "POSITION": "209",
+            "BITMAP": "MAP"
+        },
+        "198": {
+            "POSITION": "210",
+            "BITMAP": "MAP"
+        },
+        "199": {
+            "POSITION": "211",
+            "BITMAP": "MAP"
+        },
+        "200": {
+            "POSITION": "212",
+            "BITMAP": "MAP"
+        },
+        "201": {
+            "POSITION": "213",
+            "BITMAP": "MAP"
+        },
+        "202": {
+            "POSITION": "214",
+            "BITMAP": "MAP"
+        },
+        "203": {
+            "POSITION": "215",
+            "BITMAP": "MAP"
+        },
+        "204": {
+            "POSITION": "216",
+            "BITMAP": "MAP"
+        },
+        "205": {
+            "POSITION": "217",
+            "BITMAP": "MAP"
+        },
+        "206": {
+            "POSITION": "218",
+            "BITMAP": "MAP"
+        },
+        "207": {
+            "POSITION": "219",
+            "BITMAP": "MAP"
+        },
+        "208": {
+            "POSITION": "220",
+            "BITMAP": "MAP"
+        },
+        "177": {
+            "POSITION": "221",
+            "BITMAP": "MAP"
+        },
+        "176": {
+            "POSITION": "222",
+            "BITMAP": "MAP"
+        },
+        "175": {
+            "POSITION": "223",
+            "BITMAP": "MAP"
+        },
+        "174": {
+            "POSITION": "224",
+            "BITMAP": "MAP"
+        },
+        "173": {
+            "POSITION": "225",
+            "BITMAP": "MAP"
+        },
+        "172": {
+            "POSITION": "226",
+            "BITMAP": "MAP"
+        },
+        "171": {
+            "POSITION": "227",
+            "BITMAP": "MAP"
+        },
+        "170": {
+            "POSITION": "228",
+            "BITMAP": "MAP"
+        },
+        "169": {
+            "POSITION": "229",
+            "BITMAP": "MAP"
+        },
+        "168": {
+            "POSITION": "230",
+            "BITMAP": "MAP"
+        },
+        "167": {
+            "POSITION": "231",
+            "BITMAP": "MAP"
+        },
+        "166": {
+            "POSITION": "232",
+            "BITMAP": "MAP"
+        },
+        "165": {
+            "POSITION": "233",
+            "BITMAP": "MAP"
+        },
+        "164": {
+            "POSITION": "234",
+            "BITMAP": "MAP"
+        },
+        "163": {
+            "POSITION": "235",
+            "BITMAP": "MAP"
+        },
+        "162": {
+            "POSITION": "236",
+            "BITMAP": "MAP"
+        },
+        "161": {
+            "POSITION": "237",
+            "BITMAP": "MAP"
+        },
+        "160": {
+            "POSITION": "238",
+            "BITMAP": "MAP"
+        },
+        "159": {
+            "POSITION": "239",
+            "BITMAP": "MAP"
+        },
+        "158": {
+            "POSITION": "240",
+            "BITMAP": "MAP"
+        },
+        "157": {
+            "POSITION": "241",
+            "BITMAP": "MAP"
+        },
+        "156": {
+            "POSITION": "242",
+            "BITMAP": "MAP"
+        },
+        "134": {
+            "POSITION": "243",
+            "BITMAP": "MAP"
+        },
+        "135": {
+            "POSITION": "244",
+            "BITMAP": "MAP"
+        },
+        "136": {
+            "POSITION": "245",
+            "BITMAP": "MAP"
+        },
+        "137": {
+            "POSITION": "246",
+            "BITMAP": "MAP"
+        },
+        "138": {
+            "POSITION": "247",
+            "BITMAP": "MAP"
+        },
+        "139": {
+            "POSITION": "248",
+            "BITMAP": "MAP"
+        },
+        "140": {
+            "POSITION": "249",
+            "BITMAP": "MAP"
+        },
+        "141": {
+            "POSITION": "250",
+            "BITMAP": "MAP"
+        },
+        "142": {
+            "POSITION": "251",
+            "BITMAP": "MAP"
+        },
+        "143": {
+            "POSITION": "252",
+            "BITMAP": "MAP"
+        },
+        "144": {
+            "POSITION": "253",
+            "BITMAP": "MAP"
+        },
+        "145": {
+            "POSITION": "254",
+            "BITMAP": "MAP"
+        },
+        "146": {
+            "POSITION": "255",
+            "BITMAP": "MAP"
+        },
+        "147": {
+            "POSITION": "256",
+            "BITMAP": "MAP"
+        },
+        "148": {
+            "POSITION": "257",
+            "BITMAP": "MAP"
+        },
+        "149": {
+            "POSITION": "258",
+            "BITMAP": "MAP"
+        },
+        "150": {
+            "POSITION": "259",
+            "BITMAP": "MAP"
+        },
+        "151": {
+            "POSITION": "260",
+            "BITMAP": "MAP"
+        },
+        "152": {
+            "POSITION": "261",
+            "BITMAP": "MAP"
+        },
+        "153": {
+            "POSITION": "262",
+            "BITMAP": "MAP"
+        },
+        "154": {
+            "POSITION": "263",
+            "BITMAP": "MAP"
+        },
+        "155": {
+            "POSITION": "264",
+            "BITMAP": "MAP"
+        }
+    }
+}
