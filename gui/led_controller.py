@@ -1,3 +1,4 @@
+# gui/led_controller.py
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import asyncio
@@ -7,11 +8,9 @@ import os
 import json
 from functools import partial
 from queue import Queue, Empty
-import config.config as config
-from aiohttp import web
-
-import aiohttp
+from aiohttp import web, ClientSession
 import aiofiles
+import colorsys
 
 # ============================
 # ToolTip Class (Utility)
@@ -71,22 +70,33 @@ class ToolTip:
             tw.destroy()
 
 # ============================
-# Mock Implementations of External Modules
+# Configuration and Mock Implementations
 # ============================
 
-# Mock for utils.logging_config
-def configure_logging():
-    """Configure logging for the application."""
-    logging.basicConfig(
-        level=logging.DEBUG,  # Set to DEBUG for detailed logs
-        format='%(asctime)s [%(levelname)s] %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
+# Mock for config.config
+class Config:
+    def __init__(self):
+        self.settings = {
+            "LED_CONTROL": 50,
+            "MAX_LEDS_ROW": 10,
+            "WINDOWS": True
+        }
+        self.LED_CONTROL = self.settings["LED_CONTROL"]
+        self.MAX_LEDS_ROW = self.settings["MAX_LEDS_ROW"]
+        self.WINDOWS = self.settings["WINDOWS"]
+
+    def save_settings(self, settings):
+        """Mock save settings to a file."""
+        # For demonstration, we just update the settings in memory
+        self.settings = settings
+
+config = Config()
 
 # Mock for data.project_manager
 async def get_available_projects():
     """Return a list of available project names."""
     # For demonstration, return a static list
+    await asyncio.sleep(0.1)  # Simulate async operation
     return ["Project_Two_Regals", "Project_Benti_Regal"]
 
 async def load_project_mapping_async(project_name, base_dir):
@@ -96,7 +106,25 @@ async def load_project_mapping_async(project_name, base_dir):
     """
     project_file = os.path.join(base_dir, "projects", f"{project_name}.json")
     if not os.path.isfile(project_file):
-        raise FileNotFoundError(f"Project file not found: {project_file}")
+        # Create a default project file for demonstration
+        os.makedirs(os.path.dirname(project_file), exist_ok=True)
+        default_data = {
+            "Regal1": {
+                "1": {"FILE": "data/regal1_led1.png"},
+                "2": {"FILE": "data/regal1_led2.png"},
+                "3": {"FILE": "data/regal1_led3.png"}
+            },
+            "Regal2": {
+                "1": {"FILE": "data/regal2_led1.png"},
+                "2": {"FILE": "data/regal2_led2.png"},
+                "3": {"FILE": "data/regal2_led3.png"}
+            },
+            "selected_order": []
+        }
+        async with aiofiles.open(project_file, mode='w') as f:
+            content = json.dumps(default_data, indent=4)
+            await f.write(content)
+
     async with aiofiles.open(project_file, mode='r') as f:
         content = await f.read()
         data = json.loads(content)
@@ -112,16 +140,6 @@ async def save_project_json_async(project_name, led_data, base_dir):
     async with aiofiles.open(project_file, mode='w') as f:
         content = json.dumps(led_data, indent=4)
         await f.write(content)
-
-# Mock for network.http_client
-async def send_led_control_request_async(payload):
-    """
-    Simulate sending LED control requests to a server.
-    For demonstration, just log the payload.
-    """
-    logging.info(f"Sending LED control payload: {json.dumps(payload, indent=4)}")
-    await asyncio.sleep(1)  # Simulate network delay
-    return 
 
 # ============================
 # Mock Regal Class
@@ -191,6 +209,7 @@ class Regal:
             if col >= self.max_leds_per_row:
                 col = 0
                 row += 1
+
 # ============================
 # LEDController Class
 # ============================
@@ -236,7 +255,7 @@ class LEDController:
         self.current_edit_led = None
 
         # Configure logging
-        configure_logging()
+        self.configure_logging()
 
         # Initialize asyncio event loop in a separate thread
         self.loop = asyncio.new_event_loop()
@@ -250,7 +269,7 @@ class LEDController:
         self.process_queue()
 
         # Initialize aiohttp session
-        self.session = aiohttp.ClientSession(loop=self.loop)
+        self.session = ClientSession(loop=self.loop)
 
         # Configure styles
         self.style = ttk.Style()
@@ -264,6 +283,14 @@ class LEDController:
 
         # Handle application closure
         self.master.protocol("WM_DELETE_WINDOW", self.on_close)
+
+    def configure_logging(self):
+        """Configure logging for the application."""
+        logging.basicConfig(
+            level=logging.DEBUG,  # Set to DEBUG for detailed logs
+            format='%(asctime)s [%(levelname)s] %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
 
     def start_event_loop(self):
         """Start the asyncio event loop."""
@@ -382,6 +409,8 @@ class LEDController:
 
         # Recreate Regals with updated MAX_LEDS_ROW
         for regal_name, leds in self.led_data.items():
+            if regal_name.lower() == "selected_order":
+                continue  # Skip the selected_order key
             Regal(
                 display_name=regal_name,
                 internal_name=regal_name,
@@ -398,6 +427,7 @@ class LEDController:
         self.initialize_led_selections()
         self.update_all_labels()
         self.update_selection_count()
+        self.update_selected_order_listbox()
         logging.info("Regal frames recreated successfully.")
 
     def define_styles(self):
@@ -418,18 +448,20 @@ class LEDController:
             'Exit.TButton': {'foreground': 'white', 'background': '#dc3545', 'font': ('Helvetica', 12, 'bold')},
             'Edit.TButton': {'foreground': 'white', 'background': '#ff0000', 'font': ('Helvetica', 10, 'bold')},
             'EditSave.TButton': {'foreground': 'white', 'background': '#007bff', 'font': ('Helvetica', 12, 'bold')},
+            'MoveUp.TButton': {'foreground': 'white', 'background': '#17a2b8', 'font': ('Helvetica', 10, 'bold')},
+            'MoveDown.TButton': {'foreground': 'white', 'background': '#17a2b8', 'font': ('Helvetica', 10, 'bold')},
+            'Remove.TButton': {'foreground': 'white', 'background': '#dc3545', 'font': ('Helvetica', 10, 'bold')},
         }
 
-        for style_name, config in button_styles.items():
-            self.style.configure(style_name, **config)
+        for style_name, cfg in button_styles.items():
+            self.style.configure(style_name, **cfg)
             # Define hover effects
-            hover_bg = self.darken_color(config['background'], 0.9)
+            hover_bg = self.darken_color(cfg['background'], 0.9)
             self.style.map(style_name, foreground=[('active', 'white')],
                            background=[('active', hover_bg)])
 
     def darken_color(self, color, factor=0.9):
         """Darken the given color by the given factor."""
-        import colorsys
         color = color.lstrip('#')
         rgb = tuple(int(color[i:i+2], 16)/255.0 for i in (0, 2, 4))
         h, l, s = colorsys.rgb_to_hls(*rgb)
@@ -448,7 +480,7 @@ class LEDController:
         self.paned_window.pack(fill=tk.BOTH, expand=True)
 
         # Control Panel Frame
-        self.control_panel = ttk.Frame(self.paned_window, width=300)
+        self.control_panel = ttk.Frame(self.paned_window, width=400)
         self.paned_window.add(self.control_panel, weight=0)
 
         # LED Canvas Frame
@@ -529,6 +561,34 @@ class LEDController:
         self.selection_var = tk.StringVar(value=f"Selected LEDs: 0 / {self.MAX_SELECTION}")
         selection_label = ttk.Label(self.control_panel, textvariable=self.selection_var, font=("Helvetica", 12))
         selection_label.pack(pady=5)
+
+        # Selected Order Listbox Section
+        order_frame = ttk.LabelFrame(self.control_panel, text="Selected LEDs Order")
+        order_frame.pack(pady=10, padx=10, fill=tk.BOTH, expand=True)
+
+        self.order_listbox = tk.Listbox(order_frame, height=10)
+        self.order_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0,5), pady=5)
+
+        # Scrollbar for listbox
+        order_scrollbar = ttk.Scrollbar(order_frame, orient="vertical", command=self.order_listbox.yview)
+        order_scrollbar.pack(side=tk.LEFT, fill=tk.Y)
+        self.order_listbox.configure(yscrollcommand=order_scrollbar.set)
+
+        # Buttons to manipulate order
+        order_buttons_frame = ttk.Frame(order_frame)
+        order_buttons_frame.pack(side=tk.LEFT, fill=tk.Y, pady=5)
+
+        move_up_button = ttk.Button(order_buttons_frame, text="Move Up", command=self.move_up, style='MoveUp.TButton')
+        move_up_button.pack(fill=tk.X, pady=(0,5))
+        ToolTip(move_up_button, "Move the selected LED up in the order")
+
+        move_down_button = ttk.Button(order_buttons_frame, text="Move Down", command=self.move_down, style='MoveDown.TButton')
+        move_down_button.pack(fill=tk.X, pady=(0,5))
+        ToolTip(move_down_button, "Move the selected LED down in the order")
+
+        remove_button = ttk.Button(order_buttons_frame, text="Remove", command=self.remove_selected_order, style='Remove.TButton')
+        remove_button.pack(fill=tk.X, pady=(0,5))
+        ToolTip(remove_button, "Remove the selected LED from the order")
 
         # Control Buttons Frame
         buttons_frame = ttk.Frame(self.control_panel)
@@ -734,6 +794,8 @@ class LEDController:
 
         # Create Regals with current MAX_LEDS_ROW
         for regal_name, leds in self.led_data.items():
+            if regal_name.lower() == "selected_order":
+                continue  # Skip the selected_order key
             Regal(
                 display_name=regal_name,
                 internal_name=regal_name,  # Ensure internal_name == display_name
@@ -778,19 +840,20 @@ class LEDController:
 
         self.update_all_labels()
         self.update_selection_count()
+        self.update_selected_order_listbox()
         logging.info("LEDs displayed successfully.")
 
     def initialize_led_selections(self):
         """Initialize LED selections based on loaded project data."""
         logging.info("Initializing LED selections from project data.")
-        # Build a list of selected LEDs based on 'selected' field
-        for regal_name, leds in self.led_data.items():
-            for led_id, led_info in leds.items():
-                led_key = self.generate_unique_led_key(regal_name, led_id)
-                count = led_info.get('selected', 0)
-                for _ in range(count):
-                    self.selected_order.append(led_key)
-                    self.led_vars[led_key].set(self.led_vars[led_key].get() + 1)
+        self.selected_order.clear()
+        selected_order = self.led_data.get("selected_order", [])
+        for led_key in selected_order:
+            if led_key in self.led_vars:
+                self.selected_order.append(led_key)
+                self.led_vars[led_key].set(self.led_vars[led_key].get() + 1)
+            else:
+                logging.warning(f"LED key '{led_key}' in selected_order not found in led_vars.")
 
     def update_all_labels(self):
         """Update all LED detail labels to reflect current data."""
@@ -804,7 +867,7 @@ class LEDController:
             occurrences = self.get_led_occurrences_in_order(led_key)
             order_nums = ', '.join(str(i + 1) for i in occurrences)
             file_path = self.get_led_file_path(led_key)
-            detail_text = f"Order: {order_nums}\nCount: {selection_count}\nFILE: {file_path}"
+            detail_text = f"Order: {order_nums}\nFILE: {file_path}"
             self.led_detail_labels[led_key].config(text=detail_text)
             # Enable the Edit button
             self.led_edit_buttons[led_key].configure(state='normal')
@@ -854,7 +917,7 @@ class LEDController:
             regal_name = self.led_id_to_regal.get(led_key, "")
             led_id = led_key.split('_', 1)[1]
             if regal_name and led_id in self.led_data.get(regal_name, {}):
-                self.led_data[regal_name][led_id]['selected'] = 0
+                self.led_data[regal_name][led_id]['selected_order'] = []
             # Update LED color to deselected
             led_canvas, led_circle = self.led_buttons.get(led_key, (None, None))
             if led_canvas and led_circle:
@@ -863,6 +926,7 @@ class LEDController:
                 except tk.TclError as e:
                     logging.error(f"Error updating LED color for {led_key}: {e}")
         self.selection_var.set(f"Selected LEDs: 0 / {self.MAX_SELECTION}")
+        self.order_listbox.delete(0, tk.END)  # Clear the listbox
         # Hide the edit panel if visible
         self.current_edit_led = None
         logging.info("All selections cleared.")
@@ -880,19 +944,20 @@ class LEDController:
 
     def increment_led_selection(self, led_key):
         """Increment the selection count for an LED."""
-        # Save the current state to the undo stack before making changes
-        self.undo_stack.append(list(self.selected_order))
-        self.redo_stack.clear()
-
         if len(self.selected_order) >= self.MAX_SELECTION:
             messagebox.showwarning("Selection Limit", f"You can select up to {self.MAX_SELECTION} LEDs.")
             logging.warning("Selection limit reached.")
             return
 
+        # Save the current state to the undo stack before making changes
+        self.undo_stack.append(list(self.selected_order))
+        self.redo_stack.clear()
+
         self.led_vars[led_key].set(self.led_vars[led_key].get() + 1)
         self.selected_order.append(led_key)
         self.update_led_detail(led_key)
         self.update_selection_count()
+        self.update_selected_order_listbox()
         logging.info(f"LED {led_key} selection incremented.")
 
     def decrement_led_selection(self, led_key):
@@ -904,11 +969,14 @@ class LEDController:
 
             self.led_vars[led_key].set(self.led_vars[led_key].get() - 1)
             # Remove the last occurrence of the LED from selected_order
-            self.selected_order.reverse()
-            self.selected_order.remove(led_key)
-            self.selected_order.reverse()
+            try:
+                last_index = len(self.selected_order) - 1 - self.selected_order[::-1].index(led_key)
+                del self.selected_order[last_index]
+            except ValueError:
+                logging.warning(f"LED key '{led_key}' not found in selected_order during decrement.")
             self.update_led_detail(led_key)
             self.update_selection_count()
+            self.update_selected_order_listbox()
             logging.info(f"LED {led_key} selection decremented.")
         else:
             logging.info(f"LED {led_key} is not selected.")
@@ -926,7 +994,7 @@ class LEDController:
 
         # Create a new Toplevel window
         edit_window = tk.Toplevel(self.master)
-        edit_window.title(f"Edit LED {led_key.split('_')[1]}")
+        edit_window.title(f"Edit LED {led_key.split('_', 1)[1]}")
         edit_window.geometry("400x150")
         edit_window.grab_set()  # Make the window modal
 
@@ -1063,6 +1131,7 @@ class LEDController:
         for led_key in self.led_vars.keys():
             self.update_led_detail(led_key)
         self.update_selection_count()
+        self.update_selected_order_listbox()
         logging.info("LED selections restored successfully.")
 
     def update_selection_count(self):
@@ -1081,12 +1150,7 @@ class LEDController:
         """Asynchronous function to save project data."""
         try:
             # Update led_data with the current selections
-            for regal_name, leds in self.led_data.items():
-                for led_id in leds.keys():
-                    led_key = self.generate_unique_led_key(regal_name, led_id)
-                    count = self.led_vars[led_key].get()
-                    self.led_data[regal_name][led_id]['selected'] = count
-
+            self.led_data["selected_order"] = list(self.selected_order)
             await save_project_json_async(self.selected_project, self.led_data, self.BASE_DIR)
             logging.info("Project data saved successfully.")
             self.queue.put(("info", "Project data saved successfully."))
@@ -1219,6 +1283,7 @@ class LEDController:
     def handle_block_completed_gui(self):
         """Handle block completed event in the GUI thread."""
         logging.info("Handling block completed in GUI thread")
+        # Optionally, show a message or perform an action
         # messagebox.showinfo("Block Mode", "Block mode has been completed.")
         self.activate_leds()
 
@@ -1226,14 +1291,108 @@ class LEDController:
         """Handle application closure."""
         logging.info("Closing application.")
         # Start coroutine to close aiohttp session
+        asyncio.run_coroutine_threadsafe(self.session.close(), self.loop)
         self.loop.call_soon_threadsafe(self.loop.stop)
         self.master.destroy()
 
     def __del__(self):
         """Destructor to ensure resources are cleaned up."""
-        if self.loop.is_running():
-            self.loop.call_soon_threadsafe(self.loop.stop)
-        if not self.loop.is_closed():
-            self.loop.close()
-        logging.info("LEDController instance destroyed.")
+        try:
+            if self.loop.is_running():
+                self.loop.call_soon_threadsafe(self.loop.stop)
+            if not self.loop.is_closed():
+                self.loop.close()
+            logging.info("LEDController instance destroyed.")
+        except AttributeError:
+            # In case __init__ failed and attributes weren't set
+            pass
 
+    def update_selected_order_listbox(self):
+        """Update the listbox to reflect the current selected_order."""
+        self.order_listbox.delete(0, tk.END)
+        for index, led_key in enumerate(self.selected_order, start=1):
+            regal_name, led_id = led_key.split('_', 1)
+            display_text = f"{index}. {regal_name} - LED {led_id}"
+            self.order_listbox.insert(tk.END, display_text)
+
+    def move_up(self):
+        """Move the selected LED up in the order."""
+        selected_indices = self.order_listbox.curselection()
+        if not selected_indices:
+            messagebox.showwarning("Move Up", "Please select a LED to move.")
+            return
+        index = selected_indices[0]
+        if index == 0:
+            return  # Already at the top
+        # Save state for undo
+        self.undo_stack.append(list(self.selected_order))
+        self.redo_stack.clear()
+        # Swap in selected_order
+        self.selected_order[index], self.selected_order[index - 1] = self.selected_order[index - 1], self.selected_order[index]
+        # Update counts
+        self.reset_led_vars()
+        for led_key in self.selected_order:
+            self.led_vars[led_key].set(self.led_vars[led_key].get() + 1)
+        # Update GUI
+        self.update_all_labels()
+        self.update_selection_count()
+        self.update_selected_order_listbox()
+        logging.info(f"Moved LED at index {index} up.")
+
+    def move_down(self):
+        """Move the selected LED down in the order."""
+        selected_indices = self.order_listbox.curselection()
+        if not selected_indices:
+            messagebox.showwarning("Move Down", "Please select a LED to move.")
+            return
+        index = selected_indices[0]
+        if index == len(self.selected_order) - 1:
+            return  # Already at the bottom
+        # Save state for undo
+        self.undo_stack.append(list(self.selected_order))
+        self.redo_stack.clear()
+        # Swap in selected_order
+        self.selected_order[index], self.selected_order[index + 1] = self.selected_order[index + 1], self.selected_order[index]
+        # Update counts
+        self.reset_led_vars()
+        for led_key in self.selected_order:
+            self.led_vars[led_key].set(self.led_vars[led_key].get() + 1)
+        # Update GUI
+        self.update_all_labels()
+        self.update_selection_count()
+        self.update_selected_order_listbox()
+        logging.info(f"Moved LED at index {index} down.")
+
+    def remove_selected_order(self):
+        """Remove the selected LED from the order."""
+        selected_indices = self.order_listbox.curselection()
+        if not selected_indices:
+            messagebox.showwarning("Remove LED", "Please select a LED to remove.")
+            return
+        index = selected_indices[0]
+        led_key = self.selected_order[index]
+        # Save state for undo
+        self.undo_stack.append(list(self.selected_order))
+        self.redo_stack.clear()
+        # Remove from selected_order
+        del self.selected_order[index]
+        # Update counts
+        self.led_vars[led_key].set(self.led_vars[led_key].get() - 1)
+        # Update GUI
+        self.update_led_detail(led_key)
+        self.update_selection_count()
+        self.update_selected_order_listbox()
+        logging.info(f"Removed LED {led_key} from selection order.")
+
+    def reset_led_vars(self):
+        """Reset all LED selection variables."""
+        for led_key in self.led_vars.keys():
+            self.led_vars[led_key].set(0)
+
+    def update_selected_order_listbox(self):
+        """Update the listbox to reflect the current selected_order."""
+        self.order_listbox.delete(0, tk.END)
+        for index, led_key in enumerate(self.selected_order, start=1):
+            regal_name, led_id = led_key.split('_', 1)
+            display_text = f"{index}. {regal_name} - LED {led_id}"
+            self.order_listbox.insert(tk.END, display_text)
