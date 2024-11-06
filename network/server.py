@@ -43,7 +43,7 @@ else:
 hex_codes = ['FF0000', '00FF00', '0000FF', '00AA00']
 rgb = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 170, 0)]
 
-LED_COUNT = 69     # Number of LED pixels.
+LED_COUNT = 255    # Number of LED pixels.
 LED_PIN = 18       # GPIO pin connected to the pixels.
 LED_PIN_B = 13     # GPIO pin connected to the pixels (for stripb)
 LED_FREQ_HZ = 800000  # LED signal frequency in hertz
@@ -60,7 +60,7 @@ stripb.begin()
 stripall = [stripa, stripb]
 
 # Initialize BlinkManager
-blink_manager = BlinkManager(stripall, LED_COUNT, shelf_led_count=69)
+blink_manager = BlinkManager(stripall, LED_COUNT, shelf_led_count=255)
 
 counter = 0               # To alternate the color of control lights
 led_offset = 1            # Adjusting strip to rack

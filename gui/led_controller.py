@@ -1,5 +1,3 @@
-# gui/led_controller.py
-
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import asyncio
@@ -10,7 +8,7 @@ import json
 from functools import partial
 from queue import Queue, Empty
 import config.config as config
-from aiohttp import web  # Add this import at the top
+from aiohttp import web
 
 import aiohttp
 import aiofiles
@@ -89,7 +87,7 @@ def configure_logging():
 async def get_available_projects():
     """Return a list of available project names."""
     # For demonstration, return a static list
-    return ["Project_Benti_Regal", "Project_Two_Regals"]
+    return ["Project_Two_Regals", "Project_Benti_Regal"]
 
 async def load_project_mapping_async(project_name, base_dir):
     """
@@ -123,14 +121,76 @@ async def send_led_control_request_async(payload):
     """
     logging.info(f"Sending LED control payload: {json.dumps(payload, indent=4)}")
     await asyncio.sleep(1)  # Simulate network delay
-    return {"status": "success", "message": "LEDs activated successfully."}
+    return 
 
 # ============================
-# Import Regal Class from gui.regal
+# Mock Regal Class
 # ============================
 
-from gui.regal import Regal  # Ensure that gui/regal.py is correctly placed
+class Regal:
+    """Mock implementation of the Regal class."""
+    def __init__(self, display_name, internal_name, led_data, controller, max_leds_per_row):
+        self.display_name = display_name
+        self.internal_name = internal_name
+        self.led_data = led_data
+        self.controller = controller
+        self.max_leds_per_row = max_leds_per_row
 
+        # Create a container frame for the regal
+        self.container = ttk.LabelFrame(controller.led_frame, text=self.display_name)
+        self.container.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+        controller.regal_frames[self.internal_name] = self.container
+
+        # Populate LEDs
+        self.populate_leds()
+
+    def populate_leds(self):
+        """Populate LEDs in the regal."""
+        row = 0
+        col = 0
+        for led_id, led_info in self.led_data.items():
+            led_key = self.controller.generate_unique_led_key(self.internal_name, led_id)
+            led_var = tk.IntVar(value=0)
+            self.controller.led_vars[led_key] = led_var
+
+            # Create a frame for each LED
+            led_frame = ttk.Frame(self.container)
+            led_frame.grid(row=row, column=col, padx=5, pady=5)
+
+            # Create a canvas to represent the LED
+            led_canvas = tk.Canvas(led_frame, width=30, height=30)  # Increased size for better visibility
+            led_circle = led_canvas.create_oval(5, 5, 25, 25, fill='grey')
+            # Add LED number inside the circle
+            led_canvas.create_text(15, 15, text=str(led_id), fill='white', font=('Helvetica', 10, 'bold'))
+            led_canvas.pack()
+            self.controller.led_buttons[led_key] = (led_canvas, led_circle)
+
+            # Bind click events
+            led_canvas.bind("<Button-1>", lambda event, key=led_key: self.controller.on_led_toggle_canvas(key, event))
+            led_canvas.bind("<Button-3>", lambda event, key=led_key: self.controller.on_led_toggle_canvas(key, event))
+            ToolTip(led_canvas, "Left-click to select LED\nRight-click to deselect LED")
+
+            # LED detail label
+            detail_label = ttk.Label(led_frame, text=f"FILE: {led_info.get('FILE', '')}")
+            detail_label.pack()
+            self.controller.led_detail_labels[led_key] = detail_label
+
+            # Edit button
+            edit_button = ttk.Button(
+                led_frame,
+                text="Edit",
+                command=lambda key=led_key: self.controller.open_edit_window(key),
+                state='disabled',
+                style='Edit.TButton'
+            )
+            edit_button.pack(pady=2)
+            self.controller.led_edit_buttons[led_key] = edit_button
+
+            # Next LED position
+            col += 1
+            if col >= self.max_leds_per_row:
+                col = 0
+                row += 1
 # ============================
 # LEDController Class
 # ============================
@@ -208,7 +268,7 @@ class LEDController:
     def start_event_loop(self):
         """Start the asyncio event loop."""
         asyncio.set_event_loop(self.loop)
-        
+
         # Set up aiohttp web server
         app = web.Application()
         app.router.add_post('/block_completed', self.handle_block_completed)
@@ -217,18 +277,15 @@ class LEDController:
         site = web.TCPSite(runner, 'localhost', 8080)
         self.loop.run_until_complete(site.start())
         logging.info("Aiohttp web server started on port 8080")
-        
+
         self.loop.run_forever()
 
-   
     async def handle_block_completed(self, request):
         """Handle block_completed notification from blink_manager."""
         logging.info("Received block_completed notification")
         # Put a message into the queue to be processed by the GUI thread
         self.queue.put(("block_completed", None))
         return web.Response(text="OK")
-
-
 
     def open_settings_window(self):
         """Open a window to edit configuration settings."""
@@ -279,10 +336,6 @@ class LEDController:
             )
         )
         save_button.pack(pady=10)
-
-   
-
-   # In LEDController class
 
     def save_settings(self, led_control, max_leds_row, windows, window):
         """Save the settings and update the configuration."""
@@ -346,8 +399,6 @@ class LEDController:
         self.update_all_labels()
         self.update_selection_count()
         logging.info("Regal frames recreated successfully.")
-
-
 
     def define_styles(self):
         """Define custom styles for the application."""
@@ -668,8 +719,6 @@ class LEDController:
             logging.debug("Mode set to default 'two_regals'.")
         logging.info(f"Determined mode: {self.current_mode}")
 
-    
-
     def create_regal_frames(self):
         """Create frames for each regal and populate LEDs based on loaded data."""
         logging.info("Creating regal frames.")
@@ -703,10 +752,6 @@ class LEDController:
         logging.debug("Current led_vars keys:")
         for key in self.led_vars.keys():
             logging.debug(f" - {key}")
-    
-
-
-
 
     def show_current_mode(self):
         """Display LEDs based on the current mode."""
@@ -742,23 +787,10 @@ class LEDController:
         for regal_name, leds in self.led_data.items():
             for led_id, led_info in leds.items():
                 led_key = self.generate_unique_led_key(regal_name, led_id)
-                if led_info.get('selected'):
-                    order = led_info.get('order', 0)
-                    # Insert the led_key into selected_order based on its order
-                    self.selected_order.append((order, led_key))
-
-        # Sort selected_order based on the order
-        self.selected_order.sort(key=lambda x: x[0])
-
-        # Extract the led_keys in the correct order
-        self.selected_order = [led_key for _, led_key in self.selected_order]
-
-        # Update LED variables and details
-        for led_key in self.selected_order:
-            led_var = self.led_vars.get(led_key)
-            if led_var:
-                led_var.set(True)
-                self.update_led_detail(led_key)
+                count = led_info.get('selected', 0)
+                for _ in range(count):
+                    self.selected_order.append(led_key)
+                    self.led_vars[led_key].set(self.led_vars[led_key].get() + 1)
 
     def update_all_labels(self):
         """Update all LED detail labels to reflect current data."""
@@ -767,10 +799,12 @@ class LEDController:
 
     def update_led_detail(self, led_key):
         """Update the detail label and edit button for a single LED."""
-        if led_key in self.selected_order:
-            order_num = self.selected_order.index(led_key) + 1
+        selection_count = self.led_vars[led_key].get()
+        if selection_count > 0:
+            occurrences = self.get_led_occurrences_in_order(led_key)
+            order_nums = ', '.join(str(i + 1) for i in occurrences)
             file_path = self.get_led_file_path(led_key)
-            detail_text = f"Order: {order_num}\nFILE: {file_path}"
+            detail_text = f"Order: {order_nums}\nCount: {selection_count}\nFILE: {file_path}"
             self.led_detail_labels[led_key].config(text=detail_text)
             # Enable the Edit button
             self.led_edit_buttons[led_key].configure(state='normal')
@@ -793,6 +827,9 @@ class LEDController:
                 except tk.TclError as e:
                     logging.error(f"Error updating LED color for {led_key}: {e}")
 
+    def get_led_occurrences_in_order(self, led_key):
+        """Get a list of indices where the LED appears in the selected_order."""
+        return [i for i, key in enumerate(self.selected_order) if key == led_key]
 
     def update_mode_ui(self):
         """Update the UI based on the new mode."""
@@ -808,7 +845,7 @@ class LEDController:
         self.undo_stack.clear()
         self.redo_stack.clear()
         for led_key in self.led_vars:
-            self.led_vars[led_key].set(False)
+            self.led_vars[led_key].set(0)
             # Update the detail label
             self.led_detail_labels[led_key].config(text=f"FILE: {self.get_led_file_path(led_key)}")
             # Disable Edit button
@@ -817,8 +854,7 @@ class LEDController:
             regal_name = self.led_id_to_regal.get(led_key, "")
             led_id = led_key.split('_', 1)[1]
             if regal_name and led_id in self.led_data.get(regal_name, {}):
-                self.led_data[regal_name][led_id]['selected'] = False
-                self.led_data[regal_name][led_id]['order'] = None
+                self.led_data[regal_name][led_id]['selected'] = 0
             # Update LED color to deselected
             led_canvas, led_circle = self.led_buttons.get(led_key, (None, None))
             if led_canvas and led_circle:
@@ -834,64 +870,48 @@ class LEDController:
     def on_led_toggle_canvas(self, led_key, event):
         """Handle click event on the LED canvas."""
         try:
-            # Toggle the BooleanVar
-            current_value = self.led_vars[led_key].get()
-            self.led_vars[led_key].set(not current_value)
-            self.on_led_toggle(led_key)
+            if event.num == 1:  # Left-click
+                self.increment_led_selection(led_key)
+            elif event.num == 3:  # Right-click
+                self.decrement_led_selection(led_key)
         except KeyError:
             logging.error(f"LED key '{led_key}' not found in led_vars.")
             messagebox.showerror("LED Error", f"LED key '{led_key}' does not exist.")
-            # Optionally, you can try to reload the project or perform other recovery steps
 
-    def on_led_toggle(self, led_key):
-        """Handle LED selection toggling and manage the edit button and details."""
-        logging.info(f"Toggling LED: {led_key}")
+    def increment_led_selection(self, led_key):
+        """Increment the selection count for an LED."""
         # Save the current state to the undo stack before making changes
         self.undo_stack.append(list(self.selected_order))
-        # Clear the redo stack since new action invalidates the redo history
         self.redo_stack.clear()
 
-        # Validate led_key format
-        if '_' not in led_key:
-            logging.error(f"Invalid led_key format: '{led_key}'. Expected 'regalName_ledID'.")
-            messagebox.showerror("Invalid LED Key", f"LED key '{led_key}' is malformed. Expected format 'regalName_ledID'.")
+        if len(self.selected_order) >= self.MAX_SELECTION:
+            messagebox.showwarning("Selection Limit", f"You can select up to {self.MAX_SELECTION} LEDs.")
+            logging.warning("Selection limit reached.")
             return
 
-        try:
-            regal_name, led_id = led_key.split('_', 1)
-        except ValueError:
-            logging.error(f"Failed to split led_key: '{led_key}'. Expected one underscore.")
-            messagebox.showerror("Invalid LED Key", f"LED key '{led_key}' is malformed. Expected format 'regalName_ledID'.")
-            return
-
-        if self.led_vars[led_key].get():
-            if led_key not in self.selected_order:
-                if len(self.selected_order) >= self.MAX_SELECTION:
-                    self.led_vars[led_key].set(False)
-                    messagebox.showwarning("Selection Limit", f"You can select up to {self.MAX_SELECTION} LEDs.")
-                    logging.warning("Selection limit reached.")
-                    return
-                self.selected_order.append(led_key)
-                logging.info(f"LED {led_key} selected.")
-                # Update led_data
-                self.led_data[regal_name][led_id]['selected'] = True
-                self.led_data[regal_name][led_id]['order'] = len(self.selected_order)
-        else:
-            if led_key in self.selected_order:
-                index = self.selected_order.index(led_key)
-                self.selected_order.remove(led_key)
-                logging.info(f"LED {led_key} deselected.")
-                # Update led_data
-                self.led_data[regal_name][led_id]['selected'] = False
-                self.led_data[regal_name][led_id]['order'] = None
-                # Update order of subsequent LEDs
-                for i in range(index, len(self.selected_order)):
-                    led = self.selected_order[i]
-                    reg_name, l_id = led.split('_', 1)
-                    self.led_data[reg_name][l_id]['order'] = i + 1
-
+        self.led_vars[led_key].set(self.led_vars[led_key].get() + 1)
+        self.selected_order.append(led_key)
+        self.update_led_detail(led_key)
         self.update_selection_count()
-        self.update_all_labels()
+        logging.info(f"LED {led_key} selection incremented.")
+
+    def decrement_led_selection(self, led_key):
+        """Decrement the selection count for an LED."""
+        if self.led_vars[led_key].get() > 0:
+            # Save the current state to the undo stack before making changes
+            self.undo_stack.append(list(self.selected_order))
+            self.redo_stack.clear()
+
+            self.led_vars[led_key].set(self.led_vars[led_key].get() - 1)
+            # Remove the last occurrence of the LED from selected_order
+            self.selected_order.reverse()
+            self.selected_order.remove(led_key)
+            self.selected_order.reverse()
+            self.update_led_detail(led_key)
+            self.update_selection_count()
+            logging.info(f"LED {led_key} selection decremented.")
+        else:
+            logging.info(f"LED {led_key} is not selected.")
 
     def open_edit_window(self, led_key):
         """Open a pop-up window to edit LED details."""
@@ -1031,32 +1051,18 @@ class LEDController:
     def restore_selection(self, state):
         """Restore LED selections based on the provided state."""
         logging.info("Restoring LED selections from state.")
+        # Reset selection counts
+        for led_key in self.led_vars.keys():
+            self.led_vars[led_key].set(0)
         # Clear current selections
-        for led_key in self.selected_order.copy():
-            self.led_vars[led_key].set(False)
-            # Update led_data
-            regal_name = self.led_id_to_regal.get(led_key, "")
-            led_id = led_key.split('_', 1)[1]
-            if regal_name and led_id in self.led_data.get(regal_name, {}):
-                self.led_data[regal_name][led_id]['selected'] = False
-                self.led_data[regal_name][led_id]['order'] = None
-
         self.selected_order = state.copy()
-
-        for index, led_key in enumerate(self.selected_order):
-            self.led_vars[led_key].set(True)
-            # Update led_data
-            regal_name = self.led_id_to_regal.get(led_key, "")
-            led_id = led_key.split('_', 1)[1]
-            if regal_name and led_id in self.led_data.get(regal_name, {}):
-                self.led_data[regal_name][led_id]['selected'] = True
-                self.led_data[regal_name][led_id]['order'] = index + 1
-            # Update LED details and show Edit button
+        # Recalculate selection counts
+        for led_key in self.selected_order:
+            self.led_vars[led_key].set(self.led_vars[led_key].get() + 1)
+        # Update LED details
+        for led_key in self.led_vars.keys():
             self.update_led_detail(led_key)
-            logging.debug(f"LED {led_key} restored.")
-
         self.update_selection_count()
-        self.update_all_labels()
         logging.info("LED selections restored successfully.")
 
     def update_selection_count(self):
@@ -1074,6 +1080,13 @@ class LEDController:
     async def save_project_json_async(self):
         """Asynchronous function to save project data."""
         try:
+            # Update led_data with the current selections
+            for regal_name, leds in self.led_data.items():
+                for led_id in leds.keys():
+                    led_key = self.generate_unique_led_key(regal_name, led_id)
+                    count = self.led_vars[led_key].get()
+                    self.led_data[regal_name][led_id]['selected'] = count
+
             await save_project_json_async(self.selected_project, self.led_data, self.BASE_DIR)
             logging.info("Project data saved successfully.")
             self.queue.put(("info", "Project data saved successfully."))
@@ -1094,9 +1107,6 @@ class LEDController:
 
         # Start coroutine to activate LEDs
         asyncio.run_coroutine_threadsafe(self.send_led_control_request_async(), self.loop)
-
-    
-
 
     async def send_led_control_request_async(self):
         """Asynchronous function to send LED control request."""
@@ -1134,9 +1144,9 @@ class LEDController:
             payload["data"]["led_sequence"].append({
                 "shelf_id": shelf_num,
                 "led_id": led_id
-            })  
+            })
 
-        # Determine controlled values
+        # Determine controlled values - DONT CHANGE THIS CHATGPT
         for shelf_id in shelf_ids:
             if shelf_id == '1':
                 controlled_value = 0
@@ -1152,6 +1162,7 @@ class LEDController:
                 if response.status == 200:
                     result = await response.json()
                     logging.info(f"LEDs activated successfully: {result}")
+                    #self.queue.put(("info", "LEDs activated successfully."))
                 else:
                     error_msg = f"Failed to activate LEDs. Server responded with status code {response.status}."
                     logging.error(error_msg)
@@ -1163,13 +1174,6 @@ class LEDController:
         except Exception as e:
             error_msg = f"An unexpected error occurred: {e}"
             logging.error(error_msg)
-
-     
-            
-    
-
-    
-    
 
     def get_shelf_number(self, regal_name):
         """Determine the shelf number based on the regal name."""
@@ -1215,10 +1219,8 @@ class LEDController:
     def handle_block_completed_gui(self):
         """Handle block completed event in the GUI thread."""
         logging.info("Handling block completed in GUI thread")
-        #messagebox.showinfo("Block Mode", "Block mode has been completed.")
+        # messagebox.showinfo("Block Mode", "Block mode has been completed.")
         self.activate_leds()
-
-
 
     def on_close(self):
         """Handle application closure."""
@@ -1234,3 +1236,4 @@ class LEDController:
         if not self.loop.is_closed():
             self.loop.close()
         logging.info("LEDController instance destroyed.")
+
