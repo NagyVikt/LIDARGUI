@@ -1,5 +1,5 @@
 {
-    "LED_CONTROL": 69,
-    "MAX_LEDS_ROW": 15,
+    "LED_CONTROL": 133,
+    "MAX_LEDS_ROW": 22,
     "WINDOWS": false
 }

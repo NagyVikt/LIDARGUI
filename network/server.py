@@ -7,6 +7,7 @@ from data.blink_manager import BlinkManager, Block
 from network.serial_protocol import SerialProtocol
 import serial_asyncio
 from config.config import WINDOWS
+
 # Initialize the Quart app
 app = Quart(__name__)
 app.config['JSON_SORT_KEYS'] = False
@@ -25,11 +26,9 @@ logging.basicConfig(
 
 # LED Initialization Parameters
 is_it_Pi400 = True  # False for using PI4, True for using Pi400
-if WINDOWS: 
+if WINDOWS:
     from utils.mock_rpi_ws281x import Adafruit_NeoPixel
-
-
-else: 
+else:
     # Initialize LED strips and colors
     if is_it_Pi400 == False:
         from neopixel import *
@@ -42,23 +41,23 @@ else:
         hex_codes = ['FF0000', '00FF00', '0000FF', '00AA00']  # Hex codes for colors
         rgb = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 200, 0)]  # RGB translations
 
-
 # Define color codes and RGB values
 hex_codes = ['FF0000', '00FF00', '0000FF', '00AA00']
 rgb = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 170, 0)]
 
-LED_COUNT      = 69     # Number of LED pixels.
-LED_PIN        = 18     # GPIO pin connected to the pixels.
-LED_FREQ_HZ    = 800000  # LED signal frequency in hertz
-LED_DMA        = 10      # DMA channel to use for generating signal
-LED_BRIGHTNESS = 255     # Brightness level
-LED_INVERT     = False   # Invert signal
-LED_CHANNEL    = 0       # GPIO channel
+LED_COUNT = 69     # Number of LED pixels.
+LED_PIN = 18       # GPIO pin connected to the pixels.
+LED_PIN_B = 13     # GPIO pin connected to the pixels (for stripb)
+LED_FREQ_HZ = 800000  # LED signal frequency in hertz
+LED_DMA = 10       # DMA channel to use for generating signal
+LED_BRIGHTNESS = 255  # Brightness level
+LED_INVERT = False  # Invert signal
+LED_CHANNEL = 0     # GPIO channel
 
 # Initialize LED strips
 stripa = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
 stripa.begin()
-stripb = Adafruit_NeoPixel(LED_COUNT, 13, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, 1)
+stripb = Adafruit_NeoPixel(LED_COUNT, LED_PIN_B, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, 1)
 stripb.begin()
 stripall = [stripa, stripb]
 
@@ -86,13 +85,7 @@ async def pick_leds_post():
     try:
         global counter, is_pin_needed
 
-        a = await request.get_json()
-        led_list = []
-        control = []
-        led_count = 0
-        singleled = True
-        start = False
-        temporary_led = 0
+        data = await request.get_json()
         loop = asyncio.get_event_loop()
 
         # Initialize serial and write 'Start' command if available
@@ -106,132 +99,99 @@ async def pick_leds_post():
             logging.warning("Serial protocol is not available. Skipping serial write.")
 
         # Processing shelves and control logic
-        for shelves in a.get("data", {}).get("init", {}).get("shelves", {}):
-            init = a["data"]["init"]["shelves"][shelves]
-            control_value = int(init.get("controlled", 0))
-            control.insert(int(shelves) - 1, control_value)
+        shelves_data = data.get("data", {}).get("shelves", {})
+        init_shelves = data.get("data", {}).get("init", {}).get("shelves", {})
 
-        # Determine control points based on shelves
-        if len(control) == 1:
-            control1 = control[0]
-            stripa_selected = stripall[0]
-            stripb_selected = None
-        elif len(control) == 2:
-            control1 = control[0]
-            control2 = control[1]
-            stripa_selected = stripall[0]
-            stripb_selected = None
-        else:
-            control1 = control[0]
-            control2 = control[1]
-            control3 = control[2]
-            stripa_selected = stripall[0]
-            stripb_selected = stripall[1]
+        # Turn off all LEDs before processing new data
+        await blink_manager.turn_off_all_leds()
 
-        # Function to update control LEDs
-        async def controlcolorwipe(stripa, color):
-            if len(control) == 1:
-                stripa.setPixelColor(control1 - 1, color)
-            else:
-                stripa.setPixelColor(control1 - 1, color)
-                stripa.setPixelColor(control2 - 1, color)
-            await loop.run_in_executor(None, stripa.show)
-
-        async def controlcolorwipe1(stripb, color):
-            if stripb:
-                stripb.setPixelColor(control3 - 1, color)
-                await loop.run_in_executor(None, stripb.show)
+        # Extract control values and prepare control LEDs
+        control_values = {}
+        for shelf_id, init_info in init_shelves.items():
+            control_value = int(init_info.get("controlled", 0))
+            control_values[shelf_id] = control_value
 
         # Alternate control LED colors
+        counter += 1
         if counter % 2 == 0:
-            if len(control) < 3:
-                await controlcolorwipe(stripa_selected, Color(*COLOR_SINGLE))
-            else:
-                await controlcolorwipe(stripa_selected, Color(*COLOR_SINGLE))
-                await controlcolorwipe1(stripb_selected, Color(*COLOR_SINGLE))
+            control_color = Color(*COLOR_SINGLE)
         else:
-            if len(control) < 3:
-                await controlcolorwipe(stripa_selected, Color(0, 0, 255))
-            else:
-                await controlcolorwipe(stripa_selected, Color(0, 0, 255))
-                await controlcolorwipe1(stripb_selected, Color(0, 0, 255))
+            control_color = Color(0, 0, 255)
 
-        # Function to update specific LEDs
-        async def colorWipeSpecific(strip, color, led_number, k):
-            if k == '2':
-                strip.setPixelColor(led_number + control1 - 1, color)
-            else:
-                strip.setPixelColor(led_number - 1, color)
+        # Function to update control LEDs
+        async def controlcolorwipe(strip, color, control_led):
+            strip.setPixelColor(control_led - 1, color)
             await loop.run_in_executor(None, strip.show)
 
+        # Update control LEDs
+        for shelf_id, control_value in control_values.items():
+            strip_index = 0 if int(shelf_id) <= 2 else 1  # Adjust based on your configuration
+            strip = stripall[strip_index]
+            await controlcolorwipe(strip, control_color, control_value)
+
         # Process LED commands
-        q = a.get("data", {}).get("shelves", {})
-        for k, v in q.items():
-            if k == '3':
-                strip = stripall[1]
-            else:
-                strip = stripall[0]
+        for shelf_id, shelf_data in shelves_data.items():
+            init_info = init_shelves.get(shelf_id, {})
+            controlled_value = int(init_info.get("controlled", 0))
+            leds_info = shelf_data.get("leds", {})
 
-            for ledid in v.get("leds", {}):
-                led_count += 1
-                c = v["leds"][ledid]
-                if not start:
-                    temporary_led = c
-                    start = True
-                else:
-                    if temporary_led == c:
-                        singleled = False
+            # Prepare lists for blinking and non-blinking LEDs
+            blinking_leds = []
+            non_blinking_leds = []
+            for led_id_str, led_data in leds_info.items():
+                led_id = int(led_id_str)
+                if led_data.get("on"):
+                    if led_data.get("blinking"):
+                        blinking_leds.append(led_id)
+                    else:
+                        non_blinking_leds.append(led_id)
 
-                # Write LED command to serial if available
-                if hasattr(app, 'serial_protocol') and app.serial_protocol and app.serial_protocol.transport:
+            # Adjust LED numbers by adding controlled_value
+            adjusted_blinking_leds = [led + controlled_value for led in blinking_leds]
+            adjusted_non_blinking_leds = [led + controlled_value for led in non_blinking_leds]
+
+            # Handle blinking LEDs (SINGLE mode)
+            if adjusted_blinking_leds:
+                await blink_manager.set_active_leds(adjusted_blinking_leds)
+                logging.info(f"Shelf {shelf_id}: Activated blinking LEDs {adjusted_blinking_leds}")
+
+            # Handle non-blinking LEDs (BLOCK mode)
+            if adjusted_non_blinking_leds:
+                await blink_manager.add_block(
+                    shelf_id=shelf_id,
+                    controlled_value=controlled_value,
+                    led_list=non_blinking_leds,  # Pass raw LED numbers; Block class adjusts them
+                    color_green=COLOR_BLOCK_FIRST,
+                    color_blue=COLOR_BLOCK_REST
+                )
+                logging.info(f"Shelf {shelf_id}: Added block with LEDs {adjusted_non_blinking_leds}")
+
+            # Handle colors for non-blinking LEDs
+            for led_id_str, led_data in leds_info.items():
+                led_id = int(led_id_str)
+                if led_data.get("on") and not led_data.get("blinking"):
+                    color_hex = led_data.get("color", "#00FF00")[1:]  # Remove '#' from color code
                     try:
-                        led_number = led_offset * int(ledid)
+                        color_index = hex_codes.index(color_hex.upper())
+                        color_rgb = rgb[color_index]
+                    except ValueError:
+                        color_rgb = (0, 255, 0)  # Default to green if color not found
+                        logging.error(f"Invalid color received: {color_hex}, defaulting to green.")
+                    adjusted_led = led_id + controlled_value
+                    await blink_manager.set_led_color(adjusted_led, color_rgb)
+                    logging.info(f"Shelf {shelf_id}: Set LED {adjusted_led} to color {color_rgb}")
+
+            # Write LED command to serial if available
+            if hasattr(app, 'serial_protocol') and app.serial_protocol and app.serial_protocol.transport:
+                try:
+                    for led_id in blinking_leds + non_blinking_leds:
+                        led_number = led_offset * led_id + controlled_value
                         command = f"LED {led_number}\n".encode('utf-8')
                         app.serial_protocol.transport.write(command)
-                    except Exception as e:
-                        logging.error(f"Error during serial write: {e}")
-                else:
-                    logging.warning("Serial protocol is not available. Skipping serial write.")
-
-                # Handle LED activation and color
-                if "on" in c and c["on"]:
-                    if "blinking" in c and c["blinking"]:
-                        led_number = led_offset * int(ledid)
-                        await blink_manager.set_active_leds([led_number])
-                    else:
-                        if "color" in c:
-                            color = str(c["color"])[1:]
-                            led_number = led_offset * int(ledid)
-                            try:
-                                color_index = hex_codes.index(color)
-                                color_rgb = rgb[color_index]
-                                await colorWipeSpecific(strip, Color(*color_rgb), led_number, k)
-                            except ValueError:
-                                logging.error(f"Invalid color received: {color}")
-                        else:
-                            led_number = led_offset * int(ledid)
-                            color_rgb = (0, 255, 0)
-                            await colorWipeSpecific(strip, Color(*color_rgb), led_number, k)
-                else:
-                    led_number = led_offset * int(ledid)
-                    await colorWipeSpecific(strip, Color(0, 0, 0), led_number, k)
-
-        # Determine mode based on number of LEDs
-        num_leds_on = len([v for shelves in q.values() for v in shelves["leds"].values() if v.get("on")])
-        if num_leds_on == 1:
-            logging.info("Activating SINGLE mode")
-            # SINGLE mode: Already handled above
-            pass
-        elif num_leds_on > 1:
-            logging.info("Activating BLOCK mode")
-            # BLOCK mode
-            led_order = [
-                int(ledid)
-                for shelves in q.values()
-                for ledid, v in shelves["leds"].items()
-                if v.get("on")
-            ]
-            await blink_manager.add_block(led_order)
+                except Exception as e:
+                    logging.error(f"Error during serial write: {e}")
+            else:
+                logging.warning("Serial protocol is not available. Skipping serial write.")
 
         # Write 'Stop' command to serial if available
         if hasattr(app, 'serial_protocol') and app.serial_protocol and app.serial_protocol.transport:
@@ -243,8 +203,13 @@ async def pick_leds_post():
         else:
             logging.warning("Serial protocol is not available. Skipping serial write.")
 
-        logging.debug(f"Received payload: {a}")
-        return jsonify(a)
+        logging.debug(f"Received payload: {data}")
+        return jsonify(data)
     except Exception as e:
         logging.exception(f"An error occurred in /pick/leds: {e}")
         return jsonify({"error": str(e)}), 500
+
+# Keep the rest of the functions intact
+
+
+
