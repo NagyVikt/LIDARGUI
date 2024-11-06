@@ -1095,6 +1095,9 @@ class LEDController:
         # Start coroutine to activate LEDs
         asyncio.run_coroutine_threadsafe(self.send_led_control_request_async(), self.loop)
 
+    
+
+
     async def send_led_control_request_async(self):
         """Asynchronous function to send LED control request."""
         if not self.selected_project:
@@ -1113,11 +1116,11 @@ class LEDController:
                 "init": {
                     "shelves": {}
                 },
-                "shelves": {}
+                "led_sequence": []
             }
         }
 
-        # Organize LEDs by their regals
+        shelf_ids = set()
         for led_key in self.selected_order:
             regal_name = self.led_id_to_regal.get(led_key, "Unknown")
             try:
@@ -1126,22 +1129,22 @@ class LEDController:
                 logging.error(f"Invalid led_key format during activation: '{led_key}'. Skipping.")
                 continue
             shelf_num = self.get_shelf_number(regal_name_clean)
-            if shelf_num not in payload["data"]["init"]["shelves"]:
-                payload["data"]["init"]["shelves"][shelf_num] = {
-                    "controlled": self.LED_CONTROL  # Assuming 'controlled' is a binary flag
-                }
+            shelf_ids.add(shelf_num)
+            # Add LED to the sequence
+            payload["data"]["led_sequence"].append({
+                "shelf_id": shelf_num,
+                "led_id": led_id
+            })  
 
-            if shelf_num not in payload["data"]["shelves"]:
-                payload["data"]["shelves"][shelf_num] = {
-                    "leds": {}
-                }
-
-            # For simplicity, let's assume each LED is turned on without additional attributes
-            payload["data"]["shelves"][shelf_num]["leds"][led_id] = {
-                "on": True,
-                "blinking": False,
-                "color": "#00FF00"  # Default color green
-            }
+        # Determine controlled values
+        for shelf_id in shelf_ids:
+            if shelf_id == '1':
+                controlled_value = 0
+            elif shelf_id == '2':
+                controlled_value = self.LED_CONTROL  # Assuming LED_CONTROL equals LED_COUNT per shelf
+            else:
+                controlled_value = 0  # Default to 0 for unknown shelves
+            payload["data"]["init"]["shelves"][shelf_id] = {"controlled": controlled_value}
 
         # Send the POST request to the server
         try:
@@ -1149,7 +1152,6 @@ class LEDController:
                 if response.status == 200:
                     result = await response.json()
                     logging.info(f"LEDs activated successfully: {result}")
-                    #self.queue.put(("info", "LEDs activated successfully."))
                 else:
                     error_msg = f"Failed to activate LEDs. Server responded with status code {response.status}."
                     logging.error(error_msg)
@@ -1161,6 +1163,13 @@ class LEDController:
         except Exception as e:
             error_msg = f"An unexpected error occurred: {e}"
             logging.error(error_msg)
+
+     
+            
+    
+
+    
+    
 
     def get_shelf_number(self, regal_name):
         """Determine the shelf number based on the regal name."""

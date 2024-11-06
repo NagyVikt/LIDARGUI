@@ -1,4 +1,4 @@
-# network/server.py
+# server.py
 
 import asyncio
 import logging
@@ -21,8 +21,6 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-
-# Function to check if running on Raspberry Pi
 
 # LED Initialization Parameters
 is_it_Pi400 = True  # False for using PI4, True for using Pi400
@@ -98,18 +96,15 @@ async def pick_leds_post():
         else:
             logging.warning("Serial protocol is not available. Skipping serial write.")
 
-        # Processing shelves and control logic
-        shelves_data = data.get("data", {}).get("shelves", {})
-        init_shelves = data.get("data", {}).get("init", {}).get("shelves", {})
-
         # Turn off all LEDs before processing new data
         await blink_manager.turn_off_all_leds()
 
         # Extract control values and prepare control LEDs
-        control_values = {}
+        init_shelves = data.get("data", {}).get("init", {}).get("shelves", {})
+        controlled_values = {}
         for shelf_id, init_info in init_shelves.items():
             control_value = int(init_info.get("controlled", 0))
-            control_values[shelf_id] = control_value
+            controlled_values[shelf_id] = control_value
 
         # Alternate control LED colors
         counter += 1
@@ -124,74 +119,36 @@ async def pick_leds_post():
             await loop.run_in_executor(None, strip.show)
 
         # Update control LEDs
-        for shelf_id, control_value in control_values.items():
+        for shelf_id, control_value in controlled_values.items():
             strip_index = 0 if int(shelf_id) <= 2 else 1  # Adjust based on your configuration
             strip = stripall[strip_index]
             await controlcolorwipe(strip, control_color, control_value)
 
-        # Process LED commands
-        for shelf_id, shelf_data in shelves_data.items():
-            init_info = init_shelves.get(shelf_id, {})
-            controlled_value = int(init_info.get("controlled", 0))
-            leds_info = shelf_data.get("leds", {})
+        # Extract led_sequence from the payload
+        led_sequence = data.get("data", {}).get("led_sequence", [])
 
-            # Prepare lists for blinking and non-blinking LEDs
-            blinking_leds = []
-            non_blinking_leds = []
-            for led_id_str, led_data in leds_info.items():
-                led_id = int(led_id_str)
-                if led_data.get("on"):
-                    if led_data.get("blinking"):
-                        blinking_leds.append(led_id)
-                    else:
-                        non_blinking_leds.append(led_id)
+        # Handle non-blinking LEDs (BLOCK mode)
+        if led_sequence:
+            await blink_manager.add_block(
+                led_sequence=led_sequence,
+                controlled_values=controlled_values,
+                color_green=COLOR_BLOCK_FIRST,
+                color_blue=COLOR_BLOCK_REST
+            )
+            logging.info(f"Added block with LEDs: {led_sequence}")
 
-            # Adjust LED numbers by adding controlled_value
-            adjusted_blinking_leds = [led + controlled_value for led in blinking_leds]
-            adjusted_non_blinking_leds = [led + controlled_value for led in non_blinking_leds]
+        # Handle blinking LEDs (SINGLE mode)
+        # If you have blinking LEDs in your payload, handle them here
 
-            # Handle blinking LEDs (SINGLE mode)
-            if adjusted_blinking_leds:
-                await blink_manager.set_active_leds(adjusted_blinking_leds)
-                logging.info(f"Shelf {shelf_id}: Activated blinking LEDs {adjusted_blinking_leds}")
-
-            # Handle non-blinking LEDs (BLOCK mode)
-            if adjusted_non_blinking_leds:
-                await blink_manager.add_block(
-                    shelf_id=shelf_id,
-                    controlled_value=controlled_value,
-                    led_list=non_blinking_leds,  # Pass raw LED numbers; Block class adjusts them
-                    color_green=COLOR_BLOCK_FIRST,
-                    color_blue=COLOR_BLOCK_REST
-                )
-                logging.info(f"Shelf {shelf_id}: Added block with LEDs {adjusted_non_blinking_leds}")
-
-            # Handle colors for non-blinking LEDs
-            for led_id_str, led_data in leds_info.items():
-                led_id = int(led_id_str)
-                if led_data.get("on") and not led_data.get("blinking"):
-                    color_hex = led_data.get("color", "#00FF00")[1:]  # Remove '#' from color code
-                    try:
-                        color_index = hex_codes.index(color_hex.upper())
-                        color_rgb = rgb[color_index]
-                    except ValueError:
-                        color_rgb = (0, 255, 0)  # Default to green if color not found
-                        logging.error(f"Invalid color received: {color_hex}, defaulting to green.")
-                    adjusted_led = led_id + controlled_value
-                    await blink_manager.set_led_color(adjusted_led, color_rgb)
-                    logging.info(f"Shelf {shelf_id}: Set LED {adjusted_led} to color {color_rgb}")
-
-            # Write LED command to serial if available
-            if hasattr(app, 'serial_protocol') and app.serial_protocol and app.serial_protocol.transport:
-                try:
-                    for led_id in blinking_leds + non_blinking_leds:
-                        led_number = led_offset * led_id + controlled_value
-                        command = f"LED {led_number}\n".encode('utf-8')
-                        app.serial_protocol.transport.write(command)
-                except Exception as e:
-                    logging.error(f"Error during serial write: {e}")
-            else:
-                logging.warning("Serial protocol is not available. Skipping serial write.")
+        # Write LED command to serial if available
+        if hasattr(app, 'serial_protocol') and app.serial_protocol and app.serial_protocol.transport:
+            try:
+                # If you need to send commands to the serial device, implement them here
+                pass
+            except Exception as e:
+                logging.error(f"Error during serial write: {e}")
+        else:
+            logging.warning("Serial protocol is not available. Skipping serial write.")
 
         # Write 'Stop' command to serial if available
         if hasattr(app, 'serial_protocol') and app.serial_protocol and app.serial_protocol.transport:
@@ -208,8 +165,5 @@ async def pick_leds_post():
     except Exception as e:
         logging.exception(f"An error occurred in /pick/leds: {e}")
         return jsonify({"error": str(e)}), 500
-
-# Keep the rest of the functions intact
-
 
 
