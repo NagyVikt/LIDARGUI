@@ -1,5 +1,3 @@
-# server.py
-
 import asyncio
 import logging
 from quart import Quart, request, jsonify
@@ -28,7 +26,7 @@ if WINDOWS:
     from utils.mock_rpi_ws281x import Adafruit_NeoPixel
 else:
     # Initialize LED strips and colors
-    if is_it_Pi400 == False:
+    if not is_it_Pi400:
         from neopixel import *
         logging.info("WE ARE USING Pi4")
         hex_codes = ['FF0000', '00FF00', '0000FF', '00AA00']  # Hex codes for colors
@@ -37,9 +35,10 @@ else:
         from rpi_ws281x import *
         logging.info("WE ARE USING Pi400")
         hex_codes = ['FF0000', '00FF00', '0000FF', '00AA00']  # Hex codes for colors
-        rgb = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 200, 0)]  # RGB translations
+        rgb = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 170, 0)]  # RGB translations
 
 # Define color codes and RGB values
+# Removed COLOR_BLOCK_REST as blue is no longer used
 hex_codes = ['FF0000', '00FF00', '0000FF', '00AA00']
 rgb = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 170, 0)]
 
@@ -71,7 +70,7 @@ logging.info(f"PIN BY LIGHT IS SET TO: {is_pin_needed}")
 # Define additional colors
 COLOR_SINGLE = (0, 255, 0)   # Green for SINGLE mode
 COLOR_BLOCK_FIRST = (0, 255, 0)  # Green for first LED in BLOCK mode
-COLOR_BLOCK_REST = (0, 0, 255)   # Blue for other LEDs in BLOCK mode
+# Removed COLOR_BLOCK_REST as blue is no longer used
 
 @app.route('/')
 async def hello_world():
@@ -106,16 +105,13 @@ async def pick_leds_post():
             control_value = int(init_info.get("controlled", 0))
             controlled_values[shelf_id] = control_value
 
-        # Alternate control LED colors
+        # Set control_color to alternate between green only
         counter += 1
-        if counter % 2 == 0:
-            control_color = Color(*COLOR_SINGLE)
-        else:
-            control_color = Color(0, 0, 255)
+        control_color = COLOR_SINGLE  # Always green since blue is removed
 
         # Function to update control LEDs
         async def controlcolorwipe(strip, color, control_led):
-            strip.setPixelColor(control_led - 1, color)
+            strip.setPixelColor(control_led - 1, Color(*color))
             await loop.run_in_executor(None, strip.show)
 
         # Update control LEDs
@@ -132,8 +128,8 @@ async def pick_leds_post():
             await blink_manager.add_block(
                 led_sequence=led_sequence,
                 controlled_values=controlled_values,
-                color_green=COLOR_BLOCK_FIRST,
-                color_blue=COLOR_BLOCK_REST
+                color_green=COLOR_BLOCK_FIRST
+                # Removed color_blue parameter
             )
             logging.info(f"Added block with LEDs: {led_sequence}")
 
@@ -165,5 +161,3 @@ async def pick_leds_post():
     except Exception as e:
         logging.exception(f"An error occurred in /pick/leds: {e}")
         return jsonify({"error": str(e)}), 500
-
-
