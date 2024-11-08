@@ -25,6 +25,9 @@ class Block:
         self.lock = asyncio.Lock()
         self.green_counts = defaultdict(int)  # Tracks Green state counts per LED
 
+        # Initialize the cooldown timestamp
+        self.last_correct_detection_time = 0
+
     async def initialize_block(self, blink_manager, color_green=(0, 255, 0)):
         """
         Initialize the block by setting the first LED to green.
@@ -53,11 +56,10 @@ class Block:
 
             await blink_manager.set_led_color(adjusted_led, color)
             await self.update_led_color(adjusted_led, blink_manager)  # Ensure color consistency
-            
+
             if idx == self.current_index:
                 await blink_manager.send_active_led(adjusted_led)  # Send active LED
                 logging.info(f"SENT CURRENT ACTIVE LED TO JETSON: {adjusted_led}")
-
 
         logging.info(f"Added new block with LEDs: {self.leds}")
 
@@ -75,8 +77,21 @@ class Block:
                 return
 
             expected_led = self.leds[self.current_index]
+            current_time = time.time()
 
             if detected_led == expected_led:
+                # Check cooldown
+                time_since_last = current_time - self.last_correct_detection_time
+                if time_since_last < 3:
+                    logging.info(
+                        f"Correct detection {detected_led} skipped due to cooldown. "
+                        f"{time_since_last:.2f} seconds since last correct detection."
+                    )
+                    return  # Skip processing this correct detection
+
+                # Update the last_correct_detection_time since we're accepting this detection
+                self.last_correct_detection_time = current_time
+
                 # Correct detection
                 logging.info(f"LED {detected_led} correctly detected.")
 
@@ -121,9 +136,6 @@ class Block:
                 # Schedule the incorrect detection handling without awaiting to prevent blocking
                 asyncio.create_task(blink_manager.handle_incorrect_detection(detected_led))
 
-    
-    
-    
     def determine_color(self, led_pin):
         """
         Determine the color of the LED based on green counts.
@@ -151,7 +163,7 @@ class Block:
 
 
 class BlinkManager:
-    def __init__(self, stripall, LED_COUNT, shelf_led_count,serial_protocol=None, timeout=10):
+    def __init__(self, stripall, LED_COUNT, shelf_led_count, serial_protocol=None, timeout=10):
         self.stripall = stripall
         self.LED_COUNT = LED_COUNT  # Number of LEDs per shelf
         self.shelf_led_count = shelf_led_count  # Total number of LEDs per shelf
@@ -246,10 +258,10 @@ class BlinkManager:
                 controlled_value = self.get_controlled_value(shelf_id)
                 if shelf_id == '1':
                     # For Shelf 1, LEDs 1 to 132
-                    leds = list(range(1, 133))
+                    leds = list(range(1, 255))
                 elif shelf_id == '2':
                     # For Shelf 2, LEDs 1+controlled_value to 132+controlled_value
-                    leds = [led + controlled_value for led in range(1, 133)]
+                    leds = [led + controlled_value for led in range(1, 255)]
                 else:
                     logging.error(f"Unknown shelf_id: {shelf_id}. Cannot handle block completion.")
                     continue
@@ -503,15 +515,21 @@ class BlinkManager:
         :param led_pin: The incorrect LED number.
         """
         try:
-           
+            while True:
+                current_time = time.time()
+                last_detect_time = self.incorrect_led_last_detect_time.get(led_pin, 0)
+
                 # Blink red on
                 await self.set_led_color(led_pin, (255, 0, 0))
- 
                 await asyncio.sleep(0.3)
 
                 # Blink red off
                 await self.set_led_color(led_pin, (0, 0, 0))
- 
+                await asyncio.sleep(0.3)
+
+                # Check if a new detection has occurred within the last 1 second
+                if current_time - last_detect_time > 1:
+                    break  # Exit the blinking loop
 
         except asyncio.CancelledError:
             logging.info(f"Blink task for LED {led_pin} was cancelled.")
