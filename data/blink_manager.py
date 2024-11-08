@@ -489,21 +489,15 @@ class BlinkManager:
         :param led_pin: The incorrect LED number.
         """
         try:
-            while True:
-                async with self.lock:
-                    last_detect = self.incorrect_led_last_detect_time.get(led_pin, 0)
-                current_time = time.time()
-                if current_time - last_detect > 1:
-                    # No new detection within 1 second; stop blinking
-                    break
-
+           
                 # Blink red on
                 await self.set_led_color(led_pin, (255, 0, 0))
-                await asyncio.sleep(0.5)
+ 
+                await asyncio.sleep(0.3)
 
                 # Blink red off
                 await self.set_led_color(led_pin, (0, 0, 0))
-                await asyncio.sleep(0.5)
+ 
 
         except asyncio.CancelledError:
             logging.info(f"Blink task for LED {led_pin} was cancelled.")
