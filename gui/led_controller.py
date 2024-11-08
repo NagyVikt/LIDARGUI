@@ -77,9 +77,9 @@ class ToolTip:
 class Config:
     def __init__(self):
         self.settings = {
-            "LED_CONTROL": 50,
-            "MAX_LEDS_ROW": 10,
-            "WINDOWS": True
+            "LED_CONTROL": 111,
+            "MAX_LEDS_ROW": 22,
+            "WINDOWS": False
         }
         self.LED_CONTROL = self.settings["LED_CONTROL"]
         self.MAX_LEDS_ROW = self.settings["MAX_LEDS_ROW"]
