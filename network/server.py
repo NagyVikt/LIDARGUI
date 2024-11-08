@@ -1,3 +1,5 @@
+# server.py
+
 import asyncio
 import logging
 from quart import Quart, request, jsonify
@@ -38,7 +40,6 @@ else:
         rgb = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 170, 0)]  # RGB translations
 
 # Define color codes and RGB values
-# Removed COLOR_BLOCK_REST as blue is no longer used
 hex_codes = ['FF0000', '00FF00', '0000FF', '00AA00']
 rgb = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 170, 0)]
 
@@ -58,8 +59,29 @@ stripb = Adafruit_NeoPixel(LED_COUNT, LED_PIN_B, LED_FREQ_HZ, LED_DMA, LED_INVER
 stripb.begin()
 stripall = [stripa, stripb]
 
-# Initialize BlinkManager
-blink_manager = BlinkManager(stripall, LED_COUNT, shelf_led_count=255)
+# Initialize BlinkManager without serial_protocol first
+blink_manager = BlinkManager(stripall, LED_COUNT, shelf_led_count=255, serial_protocol=None)
+
+# Define initialize_serial as a coroutine
+async def initialize_serial():
+    loop = asyncio.get_event_loop()
+    try:
+        # Adjust '/dev/ttyS0' and baudrate as per your configuration
+        serial_transport, serial_protocol = await serial_asyncio.create_serial_connection(
+            loop,
+            lambda: SerialProtocol(blink_manager, LED_COUNT, stripall),
+            '/dev/ttyS0',  # Replace with your serial port
+            baudrate=9600
+        )
+        blink_manager.serial_protocol = serial_protocol
+        logging.info("Serial connection established successfully.")
+    except Exception as e:
+        logging.error(f"Failed to establish serial connection: {e}")
+
+# Define a startup function to initialize serial
+@app.before_serving
+async def startup():
+    await initialize_serial()
 
 counter = 0               # To alternate the color of control lights
 led_offset = 1            # Adjusting strip to rack
@@ -85,15 +107,16 @@ async def pick_leds_post():
         data = await request.get_json()
         loop = asyncio.get_event_loop()
 
-        # Initialize serial and write 'Start' command if available
-        if hasattr(app, 'serial_protocol') and app.serial_protocol and app.serial_protocol.transport:
+        # Send 'Start' command over serial if available
+        if blink_manager.serial_protocol and blink_manager.serial_protocol.transport:
             try:
                 command = "Start\n".encode('utf-8')
-                app.serial_protocol.transport.write(command)
+                blink_manager.serial_protocol.transport.write(command)
+                logging.info("Sent 'Start' command over serial.")
             except Exception as e:
                 logging.error(f"Error during serial write: {e}")
         else:
-            logging.warning("Serial protocol is not available. Skipping serial write.")
+            logging.warning("Serial protocol is not available. Skipping 'Start' command.")
 
         # Turn off all LEDs before processing new data
         await blink_manager.turn_off_all_leds()
@@ -105,7 +128,7 @@ async def pick_leds_post():
             control_value = int(init_info.get("controlled", 0))
             controlled_values[shelf_id] = control_value
 
-        # Set control_color to alternate between green only
+        # Set control_color to green only
         counter += 1
         control_color = COLOR_SINGLE  # Always green since blue is removed
 
@@ -136,28 +159,21 @@ async def pick_leds_post():
         # Handle blinking LEDs (SINGLE mode)
         # If you have blinking LEDs in your payload, handle them here
 
-        # Write LED command to serial if available
-        if hasattr(app, 'serial_protocol') and app.serial_protocol and app.serial_protocol.transport:
-            try:
-                # If you need to send commands to the serial device, implement them here
-                pass
-            except Exception as e:
-                logging.error(f"Error during serial write: {e}")
-        else:
-            logging.warning("Serial protocol is not available. Skipping serial write.")
-
-        # Write 'Stop' command to serial if available
-        if hasattr(app, 'serial_protocol') and app.serial_protocol and app.serial_protocol.transport:
+        # Send 'Stop' command over serial if available
+        if blink_manager.serial_protocol and blink_manager.serial_protocol.transport:
             try:
                 command = "Stop\n".encode('utf-8')
-                app.serial_protocol.transport.write(command)
+                blink_manager.serial_protocol.transport.write(command)
+                logging.info("Sent 'Stop' command over serial.")
             except Exception as e:
                 logging.error(f"Error during serial write: {e}")
         else:
-            logging.warning("Serial protocol is not available. Skipping serial write.")
+            logging.warning("Serial protocol is not available. Skipping 'Stop' command.")
 
         logging.debug(f"Received payload: {data}")
         return jsonify(data)
     except Exception as e:
         logging.exception(f"An error occurred in /pick/leds: {e}")
         return jsonify({"error": str(e)}), 500
+
+

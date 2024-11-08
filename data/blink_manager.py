@@ -53,9 +53,15 @@ class Block:
 
             await blink_manager.set_led_color(adjusted_led, color)
             await self.update_led_color(adjusted_led, blink_manager)  # Ensure color consistency
+            
+            if idx == self.current_index:
+                await blink_manager.send_active_led(adjusted_led)  # Send active LED
+                logging.info(f"SENT CURRENT ACTIVE LED TO JETSON: {adjusted_led}")
+
 
         logging.info(f"Added new block with LEDs: {self.leds}")
 
+    
     async def handle_detection(self, detected_led, blink_manager):
         """
         Handle the detection of a specific LED within the block.
@@ -92,26 +98,32 @@ class Block:
                     self.green_counts[current_led] += 1
                     await blink_manager.set_led_color(current_led, (0, 255, 0))  # Green
                     shelf_id = blink_manager.get_shelf_id(current_led)
+                    await blink_manager.send_active_led(current_led)  # Send active LED
+                    logging.info(f"SENT CURRENT ACTIVE LED TO JETSON: {current_led}")
                     logging.info(f"Shelf {shelf_id} LED {current_led} set to Green.")
+                    
                 else:
                     # Block processing complete
                     blink_manager.mode = None
                     logging.info("Block mode completed.")
                     await blink_manager.handle_block_completion()
                     blink_manager.current_block = None  # Set this after calling handle_block_completion
-            elif detected_led in self.leds and detected_led != expected_led:
-                # Out-of-order detection but part of the block
-                logging.info(
-                    f"Out-of-Order LED {detected_led} detected but part of the block. Expected LED {expected_led}."
-                )
-                # Optionally, handle out-of-order detections differently if needed
             else:
-                # LED not part of the block or already handled
-                logging.info(
-                    f"LED {detected_led} is not part of the current block or already handled."
-                )
-                await blink_manager.handle_incorrect_detection(detected_led)
+                # Any detection not equal to expected_led is incorrect
+                if detected_led in self.leds:
+                    logging.info(
+                        f"Incorrect LED {detected_led} detected. Only LED {expected_led} is currently active."
+                    )
+                else:
+                    logging.info(
+                        f"LED {detected_led} is not part of the current block or already handled."
+                    )
+                # Schedule the incorrect detection handling without awaiting to prevent blocking
+                asyncio.create_task(blink_manager.handle_incorrect_detection(detected_led))
 
+    
+    
+    
     def determine_color(self, led_pin):
         """
         Determine the color of the LED based on green counts.
@@ -138,22 +150,8 @@ class Block:
         logging.info(f"Shelf {shelf_id} LED {led_pin} updated to {color_name}.")
 
 
-
-import asyncio
-import time
-import logging
-from config.config import WINDOWS
-import aiohttp
-
-if WINDOWS:
-    pass
-else:
-    from rpi_ws281x import Color
-
-from collections import defaultdict
-
 class BlinkManager:
-    def __init__(self, stripall, LED_COUNT, shelf_led_count, timeout=10):
+    def __init__(self, stripall, LED_COUNT, shelf_led_count,serial_protocol=None, timeout=10):
         self.stripall = stripall
         self.LED_COUNT = LED_COUNT  # Number of LEDs per shelf
         self.shelf_led_count = shelf_led_count  # Total number of LEDs per shelf
@@ -177,6 +175,22 @@ class BlinkManager:
 
         # Mapping from led_pin to shelf_id for logging
         self.led_to_shelf = {}  # Initialize an empty dictionary
+        self.serial_protocol = serial_protocol  # Reference to SerialProtocol
+
+
+    async def send_active_led(self, led_pin):
+        """
+        Sends the currently active LED to the Jetson via serial.
+        
+        :param led_pin: The LED pin number to send.
+        """
+        if self.serial_protocol:
+            message = f"#{led_pin}#\n"
+            await self.serial_protocol.send_command(message)
+            logging.info(f"Sent active LED to Jetson: {message.strip()}")
+        else:
+            logging.error("Serial protocol is not initialized. Cannot send active LED.")
+
 
     def get_controlled_value(self, shelf_id):
         """

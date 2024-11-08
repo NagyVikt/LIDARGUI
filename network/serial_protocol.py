@@ -24,20 +24,31 @@ class SerialProtocol(asyncio.Protocol):
         self.pattern = re.compile(r'#(.*?)#')  # Pattern to extract messages between '#'
 
     def connection_made(self, transport):
+        """
+        Called when a serial connection is made.
+        """
         self.transport = transport
         logging.info('Serial connection opened')
 
     def data_received(self, data):
+        """
+        Called when data is received from the serial port.
+        """
         message = data.decode(errors='ignore')
         self.buffer += message
         asyncio.create_task(self.process_buffer())
 
     def connection_lost(self, exc):
+        """
+        Called when the serial connection is lost.
+        """
         logging.info('Serial port closed')
 
     async def process_buffer(self):
+        """
+        Processes the buffered serial data to extract and handle commands.
+        """
         async with self.lock:
-
             matches = list(self.pattern.finditer(self.buffer))
             if matches:
                 for match in matches:
@@ -98,7 +109,7 @@ class SerialProtocol(asyncio.Protocol):
                     if led_pins_int:
                         if len(led_pins_int) > 1:
                             # It's a BLOCK
-                            await self.blink_manager.add_block(led_pins_int)
+                            await self.blink_manager.add_block(led_pins_int, {})
                             acknowledgment = self.ACK_FORMAT.format(','.join(map(str, led_pins_int)))
                             self.transport.write(acknowledgment.encode('utf-8'))
                             logging.info(f"Processed LED block command: {led_pins_int}")
@@ -120,3 +131,15 @@ class SerialProtocol(asyncio.Protocol):
                     logging.warning("Buffer overflow. Clearing buffer.")
                     self.buffer = ""
                 return  # Wait for more data
+
+    async def send_command(self, message):
+        """
+        Sends a command/message over the serial connection.
+
+        :param message: The message string to send.
+        """
+        if self.transport:
+            self.transport.write(message.encode('utf-8'))
+            logging.debug(f"SerialProtocol: Sent message: {message.strip()}")
+        else:
+            logging.error("SerialProtocol: Transport is not available. Cannot send message.")
