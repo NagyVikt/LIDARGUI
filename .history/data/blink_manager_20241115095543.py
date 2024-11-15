@@ -104,14 +104,6 @@ class Block:
                 self.current_index += 1
                 logging.debug(f"Incremented current_index to {self.current_index}.")
 
-                # **Cleanup incorrect detection state for the detected LED**
-                if detected_led in blink_manager.incorrect_leds:
-                    # Cancel the incorrect blinking task for this LED
-                    blink_manager.incorrect_leds[detected_led].cancel()
-                    blink_manager.incorrect_leds.pop(detected_led, None)
-                    blink_manager.incorrect_led_last_detect_time.pop(detected_led, None)
-                    logging.info(f"Cleared incorrect detection state for LED {detected_led}")
-
                 if self.current_index < len(self.leds):
                     current_led = self.leds[self.current_index]
                     self.green_counts[current_led] += 1
@@ -144,11 +136,10 @@ class Block:
 
             # Cleanup processed_leds
             keys_to_remove = [led for led, timestamp in self.processed_leds.items()
-                            if current_time - timestamp > 2]  # 2 seconds cooldown
+                              if current_time - timestamp > 2]  # 2 seconds cooldown
             for led in keys_to_remove:
                 self.processed_leds.pop(led, None)
                 self.ignored_leds.discard(led)
-
 
     def determine_color(self, led_pin):
         if self.green_counts[led_pin] > 0:
