@@ -13,17 +13,29 @@ from collections import defaultdict
 
 
 class Block:
-    def __init__(self, led_sequence):
+    def __init__(self, led_sequence, cooldown=3, per_led_cooldown=0.5):
         """
         Initialize the Block with a sequence of LEDs.
 
         :param led_sequence: List of dictionaries with 'shelf_id' and 'led_id'.
+        :param cooldown: Cooldown duration in seconds for block processing.
+        :param per_led_cooldown: Cooldown duration in seconds for individual LED processing.
         """
         self.led_sequence = led_sequence
         self.leds = []  # List of adjusted LED numbers
         self.current_index = 0
         self.lock = asyncio.Lock()
         self.green_counts = defaultdict(int)  # Tracks Green state counts per LED
+
+        # Initialize the cooldown timestamps
+        self.last_correct_detection_time = 0
+
+        # Dictionary to track processed LEDs with their last processed timestamp
+        self.processed_leds = defaultdict(float)
+
+        # Cooldown durations
+        self.cooldown = cooldown
+        self.per_led_cooldown = per_led_cooldown
 
     async def initialize_block(self, blink_manager, color_green=(0, 255, 0)):
         """
@@ -51,13 +63,12 @@ class Block:
                 color = (0, 0, 0)
                 logging.info(f"Shelf {shelf_id} LED {adjusted_led} set to Off.")
 
-            await blink_manager.set_led_color(adjusted_led, color)
-            await self.update_led_color(adjusted_led, blink_manager)  # Ensure color consistency
-            
+            # Set the LED color using update_led_color to avoid redundancy
+            await self.update_led_color(adjusted_led, blink_manager)
+
             if idx == self.current_index:
                 await blink_manager.send_active_led(adjusted_led)  # Send active LED
                 logging.info(f"SENT CURRENT ACTIVE LED TO JETSON: {adjusted_led}")
-
 
         logging.info(f"Added new block with LEDs: {self.leds}")
 
@@ -69,13 +80,41 @@ class Block:
         :param blink_manager: Instance of BlinkManager to control LEDs.
         """
         async with self.lock:
+            expected_led = self.leds[self.current_index] if self.current_index < len(self.leds) else None
+            logging.debug(f"Handling detection for LED {detected_led}. Current index: {self.current_index}, Expected LED: {expected_led}")
+
             if self.current_index >= len(self.leds):
                 logging.warning("All LEDs in the block have already been processed.")
                 return
 
-            expected_led = self.leds[self.current_index]
+            current_time = time.time()
+
+            # Check if the detected_led has already been processed within the per-LED cooldown
+            last_processed_time = self.processed_leds.get(detected_led, 0)
+            time_since_last = current_time - last_processed_time
+
+            if time_since_last < self.per_led_cooldown:
+                logging.info(
+                    f"LED {detected_led} detected again within cooldown ({time_since_last:.3f} seconds). Ignoring."
+                )
+                return  # Skip processing this detection
 
             if detected_led == expected_led:
+                # Check block-level cooldown
+                time_since_last_block = current_time - self.last_correct_detection_time
+                if time_since_last_block < self.cooldown:
+                    logging.info(
+                        f"Correct detection {detected_led} skipped due to block cooldown. "
+                        f"{time_since_last_block:.2f} seconds since last correct detection."
+                    )
+                    return  # Skip processing due to block cooldown
+
+                # Mark the LED as processed after confirming cooldown
+                self.processed_leds[detected_led] = current_time
+
+                # Update the last_correct_detection_time since we're accepting this detection
+                self.last_correct_detection_time = current_time
+
                 # Correct detection
                 logging.info(f"LED {detected_led} correctly detected.")
 
@@ -90,6 +129,7 @@ class Block:
 
                 # Move to the next LED in the sequence
                 self.current_index += 1
+                logging.debug(f"Incremented current_index to {self.current_index}.")
 
                 if self.current_index < len(self.leds):
                     # Set the next LED to Green
@@ -97,26 +137,34 @@ class Block:
                     self.green_counts[current_led] += 1
                     await blink_manager.set_led_color(current_led, (0, 255, 0))  # Green
                     shelf_id = blink_manager.get_shelf_id(current_led)
+                    await blink_manager.send_active_led(current_led)  # Send active LED
+                    logging.info(f"SENT CURRENT ACTIVE LED TO JETSON: {current_led}")
                     logging.info(f"Shelf {shelf_id} LED {current_led} set to Green.")
+                    
                 else:
                     # Block processing complete
                     blink_manager.mode = None
                     logging.info("Block mode completed.")
                     await blink_manager.handle_block_completion()
                     blink_manager.current_block = None  # Set this after calling handle_block_completion
-            elif detected_led in self.leds and detected_led != expected_led:
-                # Out-of-order detection but part of the block
-                logging.info(
-                    f"Out-of-Order LED {detected_led} detected but part of the block. Expected LED {expected_led}."
-                )
-
-                # Optionally, handle out-of-order detections differently if needed
             else:
-                # LED not part of the block or already handled
-                logging.info(
-                    f"LED {detected_led} is not part of the current block or already handled."
-                )
-                await blink_manager.handle_incorrect_detection(detected_led)
+                # Any detection not equal to expected_led is incorrect
+                if detected_led in self.leds:
+                    logging.info(
+                        f"Incorrect LED {detected_led} detected. Only LED {expected_led} is currently active."
+                    )
+                else:
+                    logging.info(
+                        f"LED {detected_led} is not part of the current block or already handled."
+                    )
+                # Schedule the incorrect detection handling without awaiting to prevent blocking
+                asyncio.create_task(blink_manager.handle_incorrect_detection(detected_led))
+
+            # Optional: Cleanup processed_leds to remove old entries
+            keys_to_remove = [led for led, timestamp in self.processed_leds.items()
+                              if current_time - timestamp > self.per_led_cooldown]
+            for led in keys_to_remove:
+                del self.processed_leds[led]
 
     def determine_color(self, led_pin):
         """
@@ -145,7 +193,17 @@ class Block:
 
 
 class BlinkManager:
-    def __init__(self, stripall, LED_COUNT, shelf_led_count,serial_protocol=None, timeout=10):
+    def __init__(self, stripall, LED_COUNT, shelf_led_count, serial_protocol=None, timeout=10, debounce_time=0.1):
+        """
+        Initialize the BlinkManager.
+
+        :param stripall: List of LED strip instances.
+        :param LED_COUNT: Number of LEDs per strip.
+        :param shelf_led_count: Total number of LEDs per shelf.
+        :param serial_protocol: Instance of SerialProtocol for communication.
+        :param timeout: Timeout duration in seconds for blinking.
+        :param debounce_time: Debounce time in seconds to ignore rapid detections.
+        """
         self.stripall = stripall
         self.LED_COUNT = LED_COUNT  # Number of LEDs per shelf
         self.shelf_led_count = shelf_led_count  # Total number of LEDs per shelf
@@ -171,6 +229,9 @@ class BlinkManager:
         self.led_to_shelf = {}  # Initialize an empty dictionary
         self.serial_protocol = serial_protocol  # Reference to SerialProtocol
 
+        # Debounce settings
+        self.debounce_time = debounce_time  # Debounce duration in seconds
+        self.last_detection_time = defaultdict(float)  # Tracks last detection time per LED
 
     async def send_active_led(self, led_pin):
         """
@@ -184,7 +245,6 @@ class BlinkManager:
             logging.info(f"Sent active LED to Jetson: {message.strip()}")
         else:
             logging.error("Serial protocol is not initialized. Cannot send active LED.")
-
 
     def get_controlled_value(self, shelf_id):
         """
@@ -207,31 +267,40 @@ class BlinkManager:
 
         :param led_sequence: List of dictionaries with 'shelf_id' and 'led_id'.
         :param controlled_values: Dictionary of controlled values per shelf.
+        :param color_green: Tuple representing the green color.
         """
-        # Store controlled values
-        self.controlled_values = controlled_values
-
-        # Map led_pin to shelf_id
-        for led_info in led_sequence:
-            shelf_id = led_info['shelf_id']
-            led_id = int(led_info['led_id'])
-            controlled_value = self.get_controlled_value(shelf_id)
-            adjusted_led = led_id + controlled_value
-            self.led_to_shelf[adjusted_led] = shelf_id
-
-        # Initialize and add the new block with the ordered LED sequence
-        block = Block(led_sequence)
-        await block.initialize_block(self, color_green)
-
         async with self.lock:
+            if self.mode == 'block':
+                logging.warning("A block is already being processed. New block addition is skipped.")
+                return  # Prevent adding a new block while another is active
+
+            # Store controlled values
+            self.controlled_values = controlled_values
+
+            # Map led_pin to shelf_id
+            for led_info in led_sequence:
+                shelf_id = led_info['shelf_id']
+                led_id = int(led_info['led_id'])
+                controlled_value = self.get_controlled_value(shelf_id)
+                adjusted_led = led_id + controlled_value
+                self.led_to_shelf[adjusted_led] = shelf_id
+
+            # Initialize and add the new block with the ordered LED sequence
+            block = Block(led_sequence, cooldown=3, per_led_cooldown=0.5)  # Specify cooldowns if needed
+            await block.initialize_block(self, color_green)
+
             self.blocks.append(block)
             self.mode = 'block'
             self.current_block = block
-        logging.info(f"Added new block with LEDs: {block.leds}")
+            logging.info(f"Added new block with LEDs: {block.leds}")
 
     async def handle_block_completion(self):
         logging.info("handle_block_completion: Starting")
         try:
+            if not self.current_block:
+                logging.warning("No current block to complete.")
+                return
+
             # Get the list of shelves involved in the current block
             shelves = set(led_info['shelf_id'] for led_info in self.current_block.led_sequence)
             leds_to_blink = []
@@ -239,11 +308,11 @@ class BlinkManager:
             for shelf_id in shelves:
                 controlled_value = self.get_controlled_value(shelf_id)
                 if shelf_id == '1':
-                    # For Shelf 1, LEDs 1 to 132
-                    leds = list(range(1, 133))
+                    # For Shelf 1, LEDs 1 to 254 (assuming LED_COUNT is 254)
+                    leds = list(range(1, self.LED_COUNT + 1))
                 elif shelf_id == '2':
-                    # For Shelf 2, LEDs 1+controlled_value to 132+controlled_value
-                    leds = [led + controlled_value for led in range(1, 133)]
+                    # For Shelf 2, LEDs 1+controlled_value to LED_COUNT+controlled_value
+                    leds = [led + controlled_value for led in range(1, self.LED_COUNT + 1)]
                 else:
                     logging.error(f"Unknown shelf_id: {shelf_id}. Cannot handle block completion.")
                     continue
@@ -376,7 +445,22 @@ class BlinkManager:
     async def handle_detection(self, detected_led):
         """
         Handles the detection of a LED based on the current mode.
+        Implements a debounce mechanism to ignore rapid repeated detections.
+
+        :param detected_led: The LED number that was detected.
         """
+        try:
+            detected_led = int(detected_led)
+        except ValueError:
+            logging.error(f"Invalid detected_led value: {detected_led}. It must be an integer.")
+            return
+
+        current_time = time.time()
+        if current_time - self.last_detection_time[detected_led] < self.debounce_time:
+            logging.info(f"Debounced detection for LED {detected_led}. Ignoring.")
+            return  # Ignore the detection
+        self.last_detection_time[detected_led] = current_time
+
         async with self.lock:
             if self.mode == 'single':
                 await self.confirm_single_detection(detected_led)
@@ -427,6 +511,7 @@ class BlinkManager:
         try:
             strip.setPixelColor(adjusted_led, Color(*color))
             await asyncio.get_event_loop().run_in_executor(None, strip.show)
+            logging.debug(f"Set LED {led_pin} on strip {strip_index} to color {color}.")
         except Exception as e:
             logging.error(f"Failed to set color for LED {led_pin}: {e}")
 
@@ -492,20 +577,26 @@ class BlinkManager:
     async def _incorrect_led_behavior(self, led_pin):
         """
         Manages the blinking behavior for an incorrect LED.
-        Blinks red every 0.5 seconds as long as detections occur within 1-second intervals.
+        Blinks red every 0.3 seconds as long as detections occur within 1-second intervals.
 
         :param led_pin: The incorrect LED number.
         """
         try:
-           
+            while True:
+                current_time = time.time()
+                last_detect_time = self.incorrect_led_last_detect_time.get(led_pin, 0)
+
                 # Blink red on
                 await self.set_led_color(led_pin, (255, 0, 0))
- 
                 await asyncio.sleep(0.3)
 
                 # Blink red off
                 await self.set_led_color(led_pin, (0, 0, 0))
- 
+                await asyncio.sleep(0.3)
+
+                # Check if a new detection has occurred within the last 1 second
+                if current_time - last_detect_time > 1:
+                    break  # Exit the blinking loop
 
         except asyncio.CancelledError:
             logging.info(f"Blink task for LED {led_pin} was cancelled.")
