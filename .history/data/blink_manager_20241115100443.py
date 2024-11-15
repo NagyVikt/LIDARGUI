@@ -53,14 +53,14 @@ class Block:
 
     async def handle_detection(self, detected_led, blink_manager):
         async with self.lock:
-            current_time = time.time()
-            expected_led = self.leds[self.current_index] if self.current_index < len(self.leds) else None
-
             logging.debug(f"Handling detection for LED {detected_led}. Current index: {self.current_index}, Expected LED: {expected_led}")
 
             if self.current_index >= len(self.leds):
                 logging.warning("All LEDs in the block have already been processed.")
                 return
+
+            current_time = time.time()
+            expected_led = self.leds[self.current_index] if self.current_index < len(self.leds) else None
 
             # Check if the detected_led has already been processed within the per-LED cooldown
             last_processed_time = self.processed_leds.get(detected_led, 0)
@@ -86,7 +86,7 @@ class Block:
                 self.last_correct_detection_time = current_time
                 logging.info(f"LED {detected_led} correctly detected.")
 
-                await blink_manager.set_led_color(detected_led, (0, 0, 0))  # Turn off the LED
+                await blink_manager.set_led_color(detected_led, (0, 0, 0))  # Off
                 shelf_id = blink_manager.get_shelf_id(detected_led)
                 logging.info(f"Shelf {shelf_id} LED {detected_led} turned Off.")
 
@@ -100,6 +100,10 @@ class Block:
                 for neighbor in neighbors:
                     self.processed_leds[neighbor] = current_time
 
+                # Move to the next LED
+                self.current_index += 1
+                logging.debug(f"Incremented current_index to {self.current_index}.")
+
                 # **Cleanup incorrect detection state for the detected LED**
                 if detected_led in blink_manager.incorrect_leds:
                     # Cancel the incorrect blinking task for this LED
@@ -108,22 +112,10 @@ class Block:
                     blink_manager.incorrect_led_last_detect_time.pop(detected_led, None)
                     logging.info(f"Cleared incorrect detection state for LED {detected_led}")
 
-                # Move to the next LED
-                self.current_index += 1
-                logging.debug(f"Incremented current_index to {self.current_index}.")
-
                 if self.current_index < len(self.leds):
                     current_led = self.leds[self.current_index]
-
-                    # **Cleanup incorrect detection state for the new expected LED**
-                    if current_led in blink_manager.incorrect_leds:
-                        blink_manager.incorrect_leds[current_led].cancel()
-                        blink_manager.incorrect_leds.pop(current_led, None)
-                        blink_manager.incorrect_led_last_detect_time.pop(current_led, None)
-                        logging.info(f"Cleared incorrect detection state for LED {current_led}")
-
                     self.green_counts[current_led] += 1
-                    await blink_manager.set_led_color(current_led, (0, 255, 0))  # Set to Green
+                    await blink_manager.set_led_color(current_led, (0, 255, 0))  # Green
                     shelf_id = blink_manager.get_shelf_id(current_led)
                     await blink_manager.send_active_led(current_led)
                     logging.info(f"SENT CURRENT ACTIVE LED TO JETSON: {current_led}")
@@ -156,7 +148,6 @@ class Block:
             for led in keys_to_remove:
                 self.processed_leds.pop(led, None)
                 self.ignored_leds.discard(led)
-
 
 
     def determine_color(self, led_pin):
