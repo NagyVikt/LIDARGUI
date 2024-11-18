@@ -13,7 +13,7 @@ from collections import defaultdict
 
 
 class Block:
-    def __init__(self, led_sequence, cooldown=3, per_led_cooldown=0.5):
+    def __init__(self, led_sequence, cooldown=1, per_led_cooldown=0.5):
         self.led_sequence = led_sequence
         self.leds = []
         self.current_index = 0
@@ -255,7 +255,7 @@ class BlinkManager:
                 adjusted_led = led_id + controlled_value
                 self.led_to_shelf[adjusted_led] = shelf_id
 
-            block = Block(led_sequence, cooldown=3, per_led_cooldown=0.5)
+            block = Block(led_sequence, cooldown=1, per_led_cooldown=0.5)
             await block.initialize_block(self, color_green)
 
             self.blocks.append(block)
