@@ -148,44 +148,50 @@ class Block:
             await self.blink_manager.set_led_color(current_led, (0, 0, 0))
 
     async def _move_to_next_led(self):
-        async with self.lock:
-            # Cancel blinking task
-            if self.current_led_blink_task and not self.current_led_blink_task.done():
-                self.current_led_blink_task.cancel()
-                self.current_led_blink_task = None
+        # Cancel blinking and timer tasks for the current LED
+        await self.cleanup()
 
-            # Turn off current LED
-            current_led = self.leds[self.current_index]
-            await self.blink_manager.set_led_color(current_led, (0, 0, 0))
-            logging.info(f"LED {current_led} turned Off.")
+        # Turn off current LED
+        current_led = self.leds[self.current_index]
+        await self.blink_manager.set_led_color(current_led, (0, 0, 0))
+        logging.info(f"LED {current_led} turned Off.")
 
-            self.current_index += 1
+        self.current_index += 1
 
-            if self.current_index < len(self.leds):
-                next_led = self.leds[self.current_index]
-                await self.blink_manager.set_led_color(next_led, (0, 255, 0))  # Set to Green
-                logging.info(f"LED {next_led} set to Green.")
-                await self.blink_manager.send_active_led(next_led)
-                logging.info(f"SENT CURRENT ACTIVE LED TO JETSON: {next_led}")
+        if self.current_index < len(self.leds):
+            next_led = self.leds[self.current_index]
+            await self.blink_manager.set_led_color(next_led, (0, 255, 0))  # Set to Green
+            logging.info(f"LED {next_led} set to Green.")
+            await self.blink_manager.send_active_led(next_led)
+            logging.info(f"SENT CURRENT ACTIVE LED TO JETSON: {next_led}")
 
-                # Reset detection time and tasks for the new LED
-                self.current_led_last_detection_time = 0
-                self.current_led_timer_task = None
-                self.current_led_blink_task = None
-            else:
-                # Block completed
-                await self.cleanup()
-                self.blink_manager.mode = None
-                logging.info("Block mode completed.")
-                await self.blink_manager.handle_block_completion()
-                self.blink_manager.current_block = None
+            # Reset detection time and tasks for the new LED
+            self.current_led_last_detection_time = 0
+            self.current_led_timer_task = None
+            self.current_led_blink_task = None
+        else:
+            # Block completed
+            await self.cleanup()
+            self.blink_manager.mode = None
+            logging.info("Block mode completed.")
+            self.blink_manager.current_block = None
+            # Ensure all tasks are canceled before handling block completion
+            await self.blink_manager.handle_block_completion()
 
     async def cleanup(self):
         if self.current_led_blink_task and not self.current_led_blink_task.done():
             self.current_led_blink_task.cancel()
+            try:
+                await self.current_led_blink_task
+            except asyncio.CancelledError:
+                pass
             self.current_led_blink_task = None
         if self.current_led_timer_task and not self.current_led_timer_task.done():
             self.current_led_timer_task.cancel()
+            try:
+                await self.current_led_timer_task
+            except asyncio.CancelledError:
+                pass
             self.current_led_timer_task = None
 
     def determine_color(self, led_pin):
@@ -287,23 +293,20 @@ class BlinkManager:
     async def handle_block_completion(self):
         logging.info("handle_block_completion: Starting")
         try:
-            if not self.current_block:
-                logging.warning("No current block to complete.")
-                return
+            # Ensure no other tasks are running that might interfere
+            if self.current_block:
+                await self.current_block.cleanup()
+                self.current_block = None
 
-            shelves = set(led_info['shelf_id'] for led_info in self.current_block.led_sequence)
+            # Proceed without holding the lock
+            shelves = set(led_info['shelf_id'] for led_info in self.blocks[0].led_sequence)
             leds_to_blink = []
 
             for shelf_id in shelves:
                 controlled_value = self.get_controlled_value(shelf_id)
-                if shelf_id == '1':
-                    leds = list(range(1, self.LED_COUNT + 1))
-                elif shelf_id == '2':
-                    leds = [led + controlled_value for led in range(1, self.LED_COUNT + 1)]
-                else:
-                    logging.error(f"Unknown shelf_id: {shelf_id}. Cannot handle block completion.")
-                    continue
-                leds_to_blink.extend(leds)
+                shelf_leds = [led_info['led_id'] for led_info in self.blocks[0].led_sequence if led_info['shelf_id'] == shelf_id]
+                adjusted_leds = [int(led_id) + controlled_value for led_id in shelf_leds]
+                leds_to_blink.extend(adjusted_leds)
 
             leds_to_blink = list(set(leds_to_blink))
 
@@ -444,20 +447,19 @@ class BlinkManager:
             return  # Ignore the detection
         self.last_detection_time[detected_led] = current_time
 
-        async with self.lock:
-            if self.mode == 'single':
-                await self.confirm_single_detection(detected_led)
-            elif self.mode == 'block':
-                if self.current_block:
-                    await self.current_block.handle_detection(detected_led)
+        if self.mode == 'single':
+            await self.confirm_single_detection(detected_led)
+        elif self.mode == 'block':
+            if self.current_block:
+                await self.current_block.handle_detection(detected_led)
+        else:
+            # Handle detections outside of modes if necessary
+            for block in self.blocks:
+                if detected_led in block.leds:
+                    await block.handle_detection(detected_led)
+                    break
             else:
-                # Handle detections outside of modes if necessary
-                for block in self.blocks:
-                    if detected_led in block.leds:
-                        await block.handle_detection(detected_led)
-                        break
-                else:
-                    logging.info(f"Detected LED {detected_led} is not part of any active block.")
+                logging.info(f"Detected LED {detected_led} is not part of any active block.")
 
     async def confirm_single_detection(self, led_pin):
         """
@@ -516,23 +518,24 @@ class BlinkManager:
             logging.debug("All LEDs have been turned off.")
 
             # Clear internal state
-            self.active_led_pins.clear()
-            logging.debug("Cleared self.active_led_pins.")
-            self.blocks.clear()
-            logging.debug("Cleared self.blocks.")
-            self.mode = None
-            logging.debug("Set self.mode to None.")
-            self.current_block = None
-            logging.debug("Set self.current_block to None.")
-            self.controlled_values.clear()
-            logging.debug("Cleared controlled values.")
+            async with self.lock:
+                self.active_led_pins.clear()
+                logging.debug("Cleared self.active_led_pins.")
+                self.blocks.clear()
+                logging.debug("Cleared self.blocks.")
+                self.mode = None
+                logging.debug("Set self.mode to None.")
+                self.current_block = None
+                logging.debug("Set self.current_block to None.")
+                self.controlled_values.clear()
+                logging.debug("Cleared controlled values.")
 
-            # Cancel any incorrect blink tasks
-            for task in self.incorrect_leds.values():
-                task.cancel()
-            self.incorrect_leds.clear()
-            self.incorrect_led_last_detect_time.clear()
-            logging.debug("Cleared incorrect LED tasks and last detection times.")
+                # Cancel any incorrect blink tasks
+                for task in self.incorrect_leds.values():
+                    task.cancel()
+                self.incorrect_leds.clear()
+                self.incorrect_led_last_detect_time.clear()
+                logging.debug("Cleared incorrect LED tasks and last detection times.")
 
             logging.info("All LEDs turned off and blocks cleared.")
         except Exception as e:
