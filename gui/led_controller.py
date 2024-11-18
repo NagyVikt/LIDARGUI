@@ -1,4 +1,3 @@
-# gui/led_controller.py
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import asyncio
@@ -363,6 +362,7 @@ class LEDController:
             )
         )
         save_button.pack(pady=10)
+        ToolTip(save_button, "Save configuration settings")
 
     def save_settings(self, led_control, max_leds_row, windows, window):
         """Save the settings and update the configuration."""
@@ -448,8 +448,6 @@ class LEDController:
             'Exit.TButton': {'foreground': 'white', 'background': '#dc3545', 'font': ('Helvetica', 12, 'bold')},
             'Edit.TButton': {'foreground': 'white', 'background': '#ff0000', 'font': ('Helvetica', 10, 'bold')},
             'EditSave.TButton': {'foreground': 'white', 'background': '#007bff', 'font': ('Helvetica', 12, 'bold')},
-            'MoveUp.TButton': {'foreground': 'white', 'background': '#17a2b8', 'font': ('Helvetica', 10, 'bold')},
-            'MoveDown.TButton': {'foreground': 'white', 'background': '#17a2b8', 'font': ('Helvetica', 10, 'bold')},
             'Remove.TButton': {'foreground': 'white', 'background': '#dc3545', 'font': ('Helvetica', 10, 'bold')},
         }
 
@@ -566,28 +564,21 @@ class LEDController:
         order_frame = ttk.LabelFrame(self.control_panel, text="Selected LEDs Order")
         order_frame.pack(pady=10, padx=10, fill=tk.BOTH, expand=True)
 
-        self.order_listbox = tk.Listbox(order_frame, height=10)
+        # Listbox with drag-and-drop
+        self.order_listbox = tk.Listbox(order_frame, height=10, selectmode=tk.BROWSE)
         self.order_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0,5), pady=5)
+
+        # Enable drag-and-drop for the Listbox
+        self.enable_listbox_drag_and_drop()
 
         # Scrollbar for listbox
         order_scrollbar = ttk.Scrollbar(order_frame, orient="vertical", command=self.order_listbox.yview)
         order_scrollbar.pack(side=tk.LEFT, fill=tk.Y)
         self.order_listbox.configure(yscrollcommand=order_scrollbar.set)
 
-        # Buttons to manipulate order
-        order_buttons_frame = ttk.Frame(order_frame)
-        order_buttons_frame.pack(side=tk.LEFT, fill=tk.Y, pady=5)
-
-        move_up_button = ttk.Button(order_buttons_frame, text="Move Up", command=self.move_up, style='MoveUp.TButton')
-        move_up_button.pack(fill=tk.X, pady=(0,5))
-        ToolTip(move_up_button, "Move the selected LED up in the order")
-
-        move_down_button = ttk.Button(order_buttons_frame, text="Move Down", command=self.move_down, style='MoveDown.TButton')
-        move_down_button.pack(fill=tk.X, pady=(0,5))
-        ToolTip(move_down_button, "Move the selected LED down in the order")
-
-        remove_button = ttk.Button(order_buttons_frame, text="Remove", command=self.remove_selected_order, style='Remove.TButton')
-        remove_button.pack(fill=tk.X, pady=(0,5))
+        # Remove Button
+        remove_button = ttk.Button(order_frame, text="Remove Selected", command=self.remove_selected_order, style='Remove.TButton')
+        remove_button.pack(side=tk.LEFT, fill=tk.X, padx=5, pady=5)
         ToolTip(remove_button, "Remove the selected LED from the order")
 
         # Control Buttons Frame
@@ -652,6 +643,89 @@ class LEDController:
         # Start populating projects after GUI is set up
         # Ensure that the loop is already running before creating tasks
         asyncio.run_coroutine_threadsafe(self.populate_projects(), self.loop)
+
+    def enable_listbox_drag_and_drop(self):
+        """Enable drag-and-drop reordering in the Listbox."""
+        self.order_listbox.bind('<ButtonPress-1>', self.on_listbox_button_press)
+        self.order_listbox.bind('<B1-Motion>', self.on_listbox_motion)
+        self.order_listbox.bind('<ButtonRelease-1>', self.on_listbox_button_release)
+        self.listbox_dragging = False
+        self.dragging_item = None
+        self.dragging_label = None
+        self.listbox_drag_start_index = None
+        self.prev_highlighted_index = None
+
+    def on_listbox_button_press(self, event):
+        """Handle the event when a button is pressed in the Listbox."""
+        self.listbox_drag_start_index = self.order_listbox.nearest(event.y)
+        self.dragging_item = self.order_listbox.get(self.listbox_drag_start_index)
+        # Create a label to drag around
+        self.dragging_label = tk.Label(self.order_listbox, text=self.dragging_item, relief='raised', bg='yellow', font=('Helvetica', 10))
+        self.dragging_label.place(x=event.x, y=event.y)
+        self.listbox_dragging = True
+
+    def on_listbox_motion(self, event):
+        """Handle the event when the mouse is moved with a button pressed in the Listbox."""
+        if not self.listbox_dragging:
+            return
+        # Move the label
+        x = event.x
+        y = event.y
+        self.dragging_label.place(x=x, y=y)
+        # Highlight the item under the cursor
+        index = self.order_listbox.nearest(event.y)
+        if self.prev_highlighted_index != index:
+            self.highlight_listbox_item(index)
+            self.prev_highlighted_index = index
+
+    def on_listbox_button_release(self, event):
+        """Handle the event when the mouse button is released in the Listbox."""
+        if not self.listbox_dragging:
+            return
+        # Remove the label
+        self.dragging_label.destroy()
+        self.dragging_label = None
+        # Get the drop index
+        drop_index = self.order_listbox.nearest(event.y)
+        if drop_index < 0:
+            drop_index = 0
+        elif drop_index >= self.order_listbox.size():
+            drop_index = self.order_listbox.size() - 1
+        # Rearrange the items
+        if drop_index != self.listbox_drag_start_index:
+            # Save state for undo
+            self.undo_stack.append(list(self.selected_order))
+            self.redo_stack.clear()
+            # Move the item in the selected_order list
+            led_key = self.selected_order.pop(self.listbox_drag_start_index)
+            self.selected_order.insert(drop_index, led_key)
+            # Update counts
+            self.reset_led_vars()
+            for key in self.selected_order:
+                self.led_vars[key].set(self.led_vars[key].get() + 1)
+            # Update GUI
+            self.update_all_labels()
+            self.update_selection_count()
+            self.update_selected_order_listbox()
+        # Clear highlighting
+        if self.prev_highlighted_index is not None:
+            self.order_listbox.itemconfig(self.prev_highlighted_index, bg='white')
+        self.prev_highlighted_index = None
+        self.listbox_dragging = False
+        self.listbox_drag_start_index = None
+
+    def highlight_listbox_item(self, index):
+        """Highlight the item at the given index in the Listbox."""
+        # Clear previous highlighting
+        if self.prev_highlighted_index is not None:
+            self.order_listbox.itemconfig(self.prev_highlighted_index, bg='white')
+        # Highlight the new item
+        self.order_listbox.itemconfig(index, bg='lightblue')
+
+    def clear_listbox_highlight(self):
+        """Clear highlighting from all items in the Listbox."""
+        for i in range(self.order_listbox.size()):
+            self.order_listbox.itemconfig(i, bg='white')
 
     async def populate_projects(self):
         """Asynchronously populate the project combobox with available projects."""
@@ -1231,13 +1305,10 @@ class LEDController:
                     error_msg = f"Failed to activate LEDs. Server responded with status code {response.status}."
                     logging.error(error_msg)
                     self.queue.put(("error", error_msg))
-        except aiohttp.ClientConnectionError:
-            error_msg = "Failed to connect to the server. Ensure that the server is running."
-            logging.error(error_msg)
-            self.queue.put(("error", error_msg))
         except Exception as e:
             error_msg = f"An unexpected error occurred: {e}"
             logging.error(error_msg)
+            self.queue.put(("error", error_msg))
 
     def get_shelf_number(self, regal_name):
         """Determine the shelf number based on the regal name."""
@@ -1314,54 +1385,7 @@ class LEDController:
             regal_name, led_id = led_key.split('_', 1)
             display_text = f"{index}. {regal_name} - LED {led_id}"
             self.order_listbox.insert(tk.END, display_text)
-
-    def move_up(self):
-        """Move the selected LED up in the order."""
-        selected_indices = self.order_listbox.curselection()
-        if not selected_indices:
-            messagebox.showwarning("Move Up", "Please select a LED to move.")
-            return
-        index = selected_indices[0]
-        if index == 0:
-            return  # Already at the top
-        # Save state for undo
-        self.undo_stack.append(list(self.selected_order))
-        self.redo_stack.clear()
-        # Swap in selected_order
-        self.selected_order[index], self.selected_order[index - 1] = self.selected_order[index - 1], self.selected_order[index]
-        # Update counts
-        self.reset_led_vars()
-        for led_key in self.selected_order:
-            self.led_vars[led_key].set(self.led_vars[led_key].get() + 1)
-        # Update GUI
-        self.update_all_labels()
-        self.update_selection_count()
-        self.update_selected_order_listbox()
-        logging.info(f"Moved LED at index {index} up.")
-
-    def move_down(self):
-        """Move the selected LED down in the order."""
-        selected_indices = self.order_listbox.curselection()
-        if not selected_indices:
-            messagebox.showwarning("Move Down", "Please select a LED to move.")
-            return
-        index = selected_indices[0]
-        if index == len(self.selected_order) - 1:
-            return  # Already at the bottom
-        # Save state for undo
-        self.undo_stack.append(list(self.selected_order))
-        self.redo_stack.clear()
-        # Swap in selected_order
-        self.selected_order[index], self.selected_order[index + 1] = self.selected_order[index + 1], self.selected_order[index]
-        # Update counts
-        self.reset_led_vars()
-        for led_key in self.selected_order:
-            self.led_vars[led_key].set(self.led_vars[led_key].get() + 1)
-        # Update GUI
-        self.update_all_labels()
-        self.update_selection_count()
-        self.update_selected_order_listbox()
-        logging.info(f"Moved LED at index {index} down.")
+            self.order_listbox.itemconfig(tk.END, bg='white')  # Set default background color
 
     def remove_selected_order(self):
         """Remove the selected LED from the order."""
@@ -1378,8 +1402,9 @@ class LEDController:
         del self.selected_order[index]
         # Update counts
         self.led_vars[led_key].set(self.led_vars[led_key].get() - 1)
-        # Update GUI
+        # Update LED detail
         self.update_led_detail(led_key)
+        # Update GUI
         self.update_selection_count()
         self.update_selected_order_listbox()
         logging.info(f"Removed LED {led_key} from selection order.")
@@ -1389,10 +1414,3 @@ class LEDController:
         for led_key in self.led_vars.keys():
             self.led_vars[led_key].set(0)
 
-    def update_selected_order_listbox(self):
-        """Update the listbox to reflect the current selected_order."""
-        self.order_listbox.delete(0, tk.END)
-        for index, led_key in enumerate(self.selected_order, start=1):
-            regal_name, led_id = led_key.split('_', 1)
-            display_text = f"{index}. {regal_name} - LED {led_id}"
-            self.order_listbox.insert(tk.END, display_text)
