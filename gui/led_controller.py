@@ -10,6 +10,7 @@ from queue import Queue, Empty
 from aiohttp import web, ClientSession
 import aiofiles
 import colorsys
+from config import config
 
 # ============================
 # ToolTip Class (Utility)
@@ -72,24 +73,36 @@ class ToolTip:
 # Configuration and Mock Implementations
 # ============================
 
-# Mock for config.config
-class Config:
-    def __init__(self):
-        self.settings = {
-            "LED_CONTROL": 111,
-            "MAX_LEDS_ROW": 22,
-            "WINDOWS": False
-        }
-        self.LED_CONTROL = self.settings["LED_CONTROL"]
-        self.MAX_LEDS_ROW = self.settings["MAX_LEDS_ROW"]
-        self.WINDOWS = self.settings["WINDOWS"]
 
-    def save_settings(self, settings):
-        """Mock save settings to a file."""
-        # For demonstration, we just update the settings in memory
-        self.settings = settings
+def save_settings(self, led_control, max_leds_row, window):
+    """Save the settings and update the configuration."""
+    # Update the settings dictionary in config module
+    config.settings["LED_CONTROL"] = led_control
+    config.settings["MAX_LEDS_ROW"] = max_leds_row
+    # WINDOWS is not saved because it's auto-detected
 
-config = Config()
+    # Save the settings to file
+    config.save_settings(config.settings)
+
+    # Update the variables in config module
+    config.LED_CONTROL = led_control
+    config.MAX_LEDS_ROW = max_leds_row
+    # WINDOWS remains as is
+
+    # Close the settings window
+    window.destroy()
+
+    # Notify the user
+    messagebox.showinfo("Settings Saved", "Configuration settings have been updated.")
+
+    # Update internal variables
+    self.LED_CONTROL = config.LED_CONTROL
+    self.MAX_LEDS_ROW = config.MAX_LEDS_ROW
+    # self.WINDOWS remains unchanged
+
+    # Recreate the regal frames with the new settings
+    self.recreate_regal_frames()
+
 
 # Mock for data.project_manager
 async def get_available_projects():

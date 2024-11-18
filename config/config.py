@@ -1,14 +1,9 @@
-# config/config.py
-
 import json
 import os
+import platform
 
-# Default settings
-DEFAULT_SETTINGS = {
-    "LED_CONTROL": 69,
-    "MAX_LEDS_ROW": 15,
-    "WINDOWS": True
-}
+# Detect operating system
+IS_WINDOWS = platform.system() == "Windows"
 
 # Path to settings file
 SETTINGS_FILE = os.path.join(os.path.dirname(__file__), "settings.json")
@@ -16,19 +11,36 @@ SETTINGS_FILE = os.path.join(os.path.dirname(__file__), "settings.json")
 def load_settings():
     if os.path.exists(SETTINGS_FILE):
         with open(SETTINGS_FILE, "r") as f:
-            settings = json.load(f)
+            try:
+                settings = json.load(f)
+            except json.JSONDecodeError:
+                print("Error decoding settings.json. Using default settings.")
+                settings = create_default_settings()
+                save_settings(settings)
     else:
-        settings = DEFAULT_SETTINGS
-        # Save default settings to file
+        settings = create_default_settings()
         save_settings(settings)
+    # Override WINDOWS setting based on detected OS
+    settings["WINDOWS"] = IS_WINDOWS
     return settings
 
 def save_settings(settings):
+    # Do not save the WINDOWS setting to settings.json
+    settings_to_save = settings.copy()
+    settings_to_save.pop("WINDOWS", None)
     with open(SETTINGS_FILE, "w") as f:
-        json.dump(settings, f, indent=4)
+        json.dump(settings_to_save, f, indent=4)
 
-# Load settings at module import
+def create_default_settings():
+    # Default settings (excluding WINDOWS)
+    settings = {
+        "LED_CONTROL": 69,
+        "MAX_LEDS_ROW": 15
+    }
+    return settings
+
+# Load settings
 settings = load_settings()
-LED_CONTROL = settings.get("LED_CONTROL", DEFAULT_SETTINGS["LED_CONTROL"])
-MAX_LEDS_ROW = settings.get("MAX_LEDS_ROW", DEFAULT_SETTINGS["MAX_LEDS_ROW"])
-WINDOWS = settings.get("WINDOWS", DEFAULT_SETTINGS["WINDOWS"])
+LED_CONTROL = settings["LED_CONTROL"]
+MAX_LEDS_ROW = settings["MAX_LEDS_ROW"]
+WINDOWS = settings["WINDOWS"]
