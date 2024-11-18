@@ -299,16 +299,8 @@ class BlinkManager:
                 self.current_block = None
 
             # Proceed without holding the lock
-            shelves = set(led_info['shelf_id'] for led_info in self.blocks[0].led_sequence)
-            leds_to_blink = []
-
-            for shelf_id in shelves:
-                controlled_value = self.get_controlled_value(shelf_id)
-                shelf_leds = [led_info['led_id'] for led_info in self.blocks[0].led_sequence if led_info['shelf_id'] == shelf_id]
-                adjusted_leds = [int(led_id) + controlled_value for led_id in shelf_leds]
-                leds_to_blink.extend(adjusted_leds)
-
-            leds_to_blink = list(set(leds_to_blink))
+            total_leds = self.LED_COUNT * len(self.stripall)
+            leds_to_blink = list(range(1, total_leds + 1))  # Blink all LEDs
 
             for cycle in range(3):
                 logging.info(f"handle_block_completion: Blinking cycle {cycle + 1}/3")
