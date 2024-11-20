@@ -835,6 +835,7 @@ class LEDController:
         self.mode_var.set(f"Current Mode: {self.current_mode.replace('_', ' ').title()}")  # Update mode label
         self.create_regal_frames()
         self.show_current_mode()
+        self.activate_leds()
 
     def log_regal_keys(self):
         """Log each regal key with its length to detect hidden spaces."""
